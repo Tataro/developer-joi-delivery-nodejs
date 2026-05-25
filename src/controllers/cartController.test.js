@@ -116,6 +116,20 @@ describe("CartController", () => {
       expect(mockRes.status).toHaveBeenCalledWith(404);
       expect(mockRes.json).toHaveBeenCalledWith({ message: errorMessage });
     });
+
+    it("shouldReturn500IfUnexpectedErrorOccurs", () => {
+      const cartService = require("../services/cartService");
+      cartService.addProductToCartForUser.mockImplementation(() => {
+        throw new Error("Unexpected error");
+      });
+
+      cartController.addProductToCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        message: "Unexpected error",
+      });
+    });
   });
 
   describe("viewCart", () => {
