@@ -16,7 +16,7 @@ class SeedData {
     const email = firstName + "." + lastName + "@gmail.com";
     const phoneNumber = SeedData.getRandomNumberUsingNextInt(
       100000000,
-      900000000
+      900000000,
     ).toString();
     return new User(
       userId,
@@ -25,7 +25,7 @@ class SeedData {
       lastName,
       email,
       phoneNumber,
-      null
+      null,
     );
   }
 
@@ -43,7 +43,7 @@ class SeedData {
       7, // expiryDate in days
       10, // threshold
       30, // availableStock
-      store // store reference
+      store, // store reference
     );
   }
 }
@@ -51,6 +51,7 @@ class SeedData {
 SeedData.store101 = SeedData.createStore("Fresh Picks", "store101");
 SeedData.store102 = SeedData.createStore("Natural Choice", "store102");
 SeedData.user101 = SeedData.createUser("user101", "John", "Doe");
+SeedData.user102 = SeedData.createUser("user102", "Rachel", "Zane");
 
 SeedData.cartForUsers = new Map([
   ["user101", SeedData.createCartForUser("user101", "John", "Doe", "cart101")],
@@ -66,6 +67,7 @@ SeedData.groceryProducts = [
   SeedData.createGroceryProduct("Crackers", "product103", SeedData.store101),
 ];
 
-SeedData.users = [SeedData.user101];
+SeedData.users = [SeedData.user101, SeedData.user102];
+SeedData.stores = [SeedData.store101, SeedData.store102];
 
 module.exports = SeedData;
