@@ -2,13 +2,21 @@ const cartService = require("../services/cartService");
 
 const cartController = {
   addProductToCart(req, res) {
-    const result = cartService.addProductToCartForUser(req.body);
-    res.status(200).json(result);
+    try {
+      const result = cartService.addProductToCartForUser(req.body);
+      res.status(200).json(result);
+    } catch (error) {
+      res.status(error.statusCode || 500).json({ message: error.message });
+    }
   },
 
   viewCart(req, res) {
-    const cart = cartService.getCartForUser(req.query.userId);
-    res.status(200).json(cart);
+    try {
+      const cart = cartService.getCartForUser(req.query.userId);
+      res.status(200).json(cart);
+    } catch (error) {
+      res.status(error.statusCode || 500).json({ message: error.message });
+    }
   },
 };
 
