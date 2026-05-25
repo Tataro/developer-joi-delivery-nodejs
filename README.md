@@ -196,14 +196,33 @@ Response Body
 ### Inventory Health
 
 ```http
-GET /inventory/health?storeid=<storeid>
+GET /inventory/health?storeId=<storeId>
 ```
 
 Response Body
 
 ```json lines
 {
-  // to be implemented.
+  "storeId": "store-1",
+  "totalProducts": 10,
+  "lowStockCount": 2,
+  "outOfStockCount": 1
+}
+```
+
+**400 Bad Request** — missing `storeId` query parameter
+
+```json lines
+{
+  "message": "storeId is required"
+}
+```
+
+**404 Not Found** — no store matches the given `storeId`
+
+```json lines
+{
+  "message": "Store with id <storeId> not found"
 }
 ```
 
