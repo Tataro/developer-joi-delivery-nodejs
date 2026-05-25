@@ -4,8 +4,8 @@ const User = require("../domain/user");
 const GroceryProduct = require("../domain/groceryProduct");
 
 class SeedData {
-  static createCartForUser(userId, firstName, lastName, cartId) {
-    return new Cart(cartId, SeedData.store101, SeedData.user101);
+  static createCartForUser(user, firstName, lastName, cartId) {
+    return new Cart(cartId, null, user);
   }
 
   static createStore(outletName, storeId) {
@@ -54,10 +54,13 @@ SeedData.user101 = SeedData.createUser("user101", "John", "Doe");
 SeedData.user102 = SeedData.createUser("user102", "Rachel", "Zane");
 
 SeedData.cartForUsers = new Map([
-  ["user101", SeedData.createCartForUser("user101", "John", "Doe", "cart101")],
+  [
+    "user101",
+    SeedData.createCartForUser(SeedData.user101, "John", "Doe", "cart101"),
+  ],
   [
     "user102",
-    SeedData.createCartForUser("user102", "Rachel", "Zane", "cart102"),
+    SeedData.createCartForUser(SeedData.user102, "Rachel", "Zane", "cart102"),
   ],
 ]);
 
