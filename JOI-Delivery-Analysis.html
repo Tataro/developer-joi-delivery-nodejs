@@ -116,14 +116,14 @@
     <span class="tag">CODE ANALYSIS · PROGRESS · ROADMAP</span>
     <h1>JOI Delivery — Node.js Backend</h1>
     <p>Food &amp; grocery delivery platform · Express + Clean Architecture (domain / services / controllers)</p>
-    <p>Goal: <strong>complete the whole system</strong> — implement <span class="inline">/inventory/health</span>, fix latent bugs, add tests.</p>
-    <p style="font-size:13px">Status as of 2026-05-26 · reflects code on branch <span class="inline">main</span> (32/32 tests passing, coverage thresholds met)</p>
+    <p>Goal: <strong>complete the whole system</strong> — implement <span class="inline">/inventory/health</span>, fix latent bugs, add tests, then extend the platform to the <strong>food / restaurant</strong> side.</p>
+    <p style="font-size:13px">Status as of 2026-05-26 · reflects code on branch <span class="inline">main</span> (56/56 tests passing across 11 suites · 100% coverage)</p>
   </header>
 
   <div class="summary-grid">
     <div class="stat green"><div class="n">100%</div><div class="l">scope done</div></div>
-    <div class="stat accent"><div class="n">32</div><div class="l">tests passing</div></div>
-    <div class="stat green"><div class="n">100%</div><div class="l">branch coverage</div></div>
+    <div class="stat accent"><div class="n">56</div><div class="l">tests passing</div></div>
+    <div class="stat green"><div class="n">100%</div><div class="l">coverage (all metrics)</div></div>
     <div class="stat amber"><div class="n">1</div><div class="l">deferred decision</div></div>
   </div>
 
@@ -143,6 +143,8 @@
       <tr><td><strong>Cart flow — validation + error handling</strong> (400 / 404 / 500 mapping)</td><td class="mono">cartService.js, cartController.js, errors/notFoundError.js</td><td class="mono">df1e726, 5dd679e</td></tr>
       <tr><td>Unit tests for <span class="inline">productService</span> &amp; <span class="inline">userService</span></td><td class="mono">productService.test.js, userService.test.js</td><td class="mono">ae84c2b</td></tr>
       <tr><td><strong>Coverage enforced</strong> — <span class="inline">collectCoverageFrom</span> + <span class="inline">coverageThreshold</span></td><td class="mono">jest.config.json</td><td class="mono">a32c43b</td></tr>
+      <tr><td><strong>Food domain</strong> — <span class="inline">FoodProduct</span> / <span class="inline">Restaurant</span> classes + seed + tests</td><td class="mono">domain/foodProduct.js, domain/restaurant.js, seedData.js, *.test.js</td><td class="mono">7eefedc</td></tr>
+      <tr><td><strong>Food ordering flow</strong> — polymorphic cart + menu endpoints</td><td class="mono">productService.js, restaurantService.js, restaurantController.js, app.js, README.md</td><td class="mono">72d14e2</td></tr>
     </tbody>
   </table>
 
@@ -162,6 +164,38 @@ try {
     <p class="num">Result shape: <code>{ "storeId": "store101", "totalProducts": 3, "lowStockCount": 0, "outOfStockCount": 0 }</code></p>
   </div>
 
+  <!-- ============ FOOD / RESTAURANT ============ -->
+  <h2>🍽️ Food / Restaurant side</h2>
+  <p style="color:var(--muted)">The two empty placeholder classes (<span class="inline">FoodProduct</span>, <span class="inline">Restaurant</span>) were the platform's unbuilt half — the grocery path was the worked example. They are now implemented symmetrically and wired into a working order flow.</p>
+
+  <div class="card sev-done">
+    <div class="card-head"><span class="badge b-done">Done</span><h3>Domain — food-specific, not a grocery copy</h3></div>
+    <p>The base <span class="inline">Product</span> / <span class="inline">Outlet</span> classes stay thin (shared fields only); each subtype adds its own domain attributes.</p>
+    <table>
+      <thead><tr><th>Concept</th><th>Grocery</th><th>Food</th></tr></thead>
+      <tbody>
+        <tr><td>Outlet</td><td><span class="inline">GroceryStore</span> · <span class="inline">inventory</span> Set</td><td><span class="inline">Restaurant</span> · <span class="inline">menu</span> Set, <span class="inline">cuisineType</span></td></tr>
+        <tr><td>Product</td><td><span class="inline">weight</span>, <span class="inline">expiryDate</span>, <span class="inline">availableStock</span>, <span class="inline">threshold</span></td><td><span class="inline">isAvailable</span>, <span class="inline">preparationTime</span>, <span class="inline">isVegetarian</span>, <span class="inline">customizations</span></td></tr>
+        <tr><td>Stock model</td><td>counted units (decrementable)</td><td>made-to-order (available / not)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card sev-done">
+    <div class="card-head"><span class="badge b-done">Done</span><h3>Flow — polymorphism + the inventory-health mismatch</h3></div>
+    <ul>
+      <li><strong>Polymorphic add-to-cart</strong>: <span class="inline">productService.getProduct</span> now searches both catalogs (grocery via <span class="inline">store</span>, food via <span class="inline">restaurant</span>). Because <span class="inline">cart.products</span> is <span class="inline">Array&lt;Product&gt;</span>, food items go through the <em>same</em> <span class="inline">POST /cart/product</span> — no cart code changed.</li>
+      <li><strong>Menu browse</strong>: <span class="inline">GET /restaurant/menu?restaurantId=</span> → <span class="inline">{ restaurantId, name, cuisineType, menu[] }</span></li>
+      <li><strong>Menu availability</strong>: <span class="inline">GET /restaurant/menu/health?restaurantId=</span> — the restaurant counterpart to inventory health. Since food is made-to-order, "health" counts <span class="inline">isAvailable</span> items, not stock levels → <span class="inline">{ restaurantId, totalItems, availableItems, unavailableItems }</span></li>
+      <li><strong>Same conventions</strong>: <span class="inline">RestaurantNotFoundError</span> (404) mirrors <span class="inline">StoreNotFoundError</span>; menu is derived from <span class="inline">SeedData.foodProducts</span> (the <span class="inline">menu</span> Set stays empty — same circular-reference caution as grocery).</li>
+    </ul>
+    <pre><code><span class="cmt"># one cart, both product types</span>
+GET  /restaurant/menu?restaurantId=restaurant101          <span class="cmt"># browse</span>
+POST /cart/product {"productId":"food101","outletId":"restaurant101", ...}   <span class="cmt"># add (polymorphic)</span>
+GET  /cart/view?userId=user101                            <span class="cmt"># food + grocery together</span>
+GET  /restaurant/menu/health?restaurantId=restaurant101   <span class="cmt"># {total/available/unavailable}</span></code></pre>
+  </div>
+
   <!-- ============ REMAINING ============ -->
   <h2>◻️ What's left</h2>
   <p style="color:var(--muted)">Every issue from the original scope is now resolved (see Completed above). What remains is one <strong>deferred product decision</strong> plus a few cosmetic cleanups — none are bugs.</p>
@@ -171,9 +205,9 @@ try {
       <tr><td class="num">1</td><td>Quantity + stock decrement — intentionally moved to a future checkout/order endpoint</td><td class="mono">(new) orderService / orderController</td><td><span class="badge b-med">Deferred</span></td></tr>
       <tr><td class="num">2</td><td><span class="inline">createCartForUser</span> keeps two unused params (<span class="inline">firstName</span>, <span class="inline">lastName</span>)</td><td class="mono">seedData.js</td><td><span class="badge b-low">Cosmetic</span></td></tr>
       <tr><td class="num">3</td><td><span class="inline">cartController.test.js</span> uses fake id <span class="inline">grocery101</span> (harmless — service mocked)</td><td class="mono">cartController.test.js</td><td><span class="badge b-low">Cosmetic</span></td></tr>
-      <tr><td class="num">4</td><td><span class="inline">foodProduct.js</span> / <span class="inline">restaurant.js</span> are unused placeholders (0% coverage)</td><td class="mono">domain/*</td><td><span class="badge b-low">Dead code</span></td></tr>
     </tbody>
   </table>
+  <p style="color:var(--muted);font-size:13px">The earlier "dead placeholder classes" item is resolved — <span class="inline">FoodProduct</span> / <span class="inline">Restaurant</span> are now real, tested, and 100% covered (see Food / Restaurant side above).</p>
 
   <!-- 1 -->
   <div class="card sev-med">
@@ -197,17 +231,17 @@ try {
     <ul>
       <li><strong>Unused params</strong>: <span class="inline">createCartForUser(user, firstName, lastName, cartId)</span> — <span class="inline">firstName</span>/<span class="inline">lastName</span> are passed but ignored; drop them from the signature.</li>
       <li><strong>Test fixture id</strong>: <span class="inline">cartController.test.js</span> uses <span class="inline">grocery101</span>; align with the seed's <span class="inline">product101</span> for clarity (passes either way since the service is mocked).</li>
-      <li><strong>Dead placeholders</strong>: <span class="inline">foodProduct.js</span> &amp; <span class="inline">restaurant.js</span> are never instantiated (only the Grocery* variants are used) → 0% coverage. Either delete them (YAGNI) or keep as scaffolding for the future restaurant/food side.</li>
     </ul>
   </div>
 
   <!-- ============ DESIGN CAUTION ============ -->
   <h2>⚠️ Design caution (applies to any future cart/order work)</h2>
   <div class="card sev-med">
-    <h3>Do not populate <span class="inline">GroceryStore.inventory</span> Set</h3>
-    <p>Cart responses serialize <span class="inline">product.store</span>. If products were added back into the store's <span class="inline">inventory</span> Set, you'd create a circular reference:</p>
-    <pre><code>product → store → inventory → product → store → ...  💥</code></pre>
-    <p><span class="inline">res.json()</span> would throw on <span class="inline">/cart/product</span> and <span class="inline">/cart/view</span>. The inventory feature already sidesteps this by deriving products from <span class="inline">SeedData.groceryProducts</span> — keep it that way and leave the <span class="inline">inventory</span> Set empty.</p>
+    <h3>Keep the outlet collection Sets empty (<span class="inline">GroceryStore.inventory</span> &amp; <span class="inline">Restaurant.menu</span>)</h3>
+    <p>Responses serialize a product's outlet (<span class="inline">product.store</span> / <span class="inline">product.restaurant</span>). If products were added back into the outlet's collection Set, you'd create a circular reference:</p>
+    <pre><code>product → store → inventory → product → ...   💥
+product → restaurant → menu → product → ...   💥</code></pre>
+    <p><span class="inline">res.json()</span> would throw on the cart and menu endpoints. Both features sidestep this by deriving products from <span class="inline">SeedData.groceryProducts</span> / <span class="inline">SeedData.foodProducts</span> — keep it that way and leave the <span class="inline">inventory</span> / <span class="inline">menu</span> Sets empty.</p>
   </div>
 
   <!-- ============ TEST PLAN ============ -->
@@ -268,19 +302,19 @@ try {
   }
 }</code></pre>
 
-  <div class="label">Actual coverage — <span class="inline">npm run test-coverage</span> (32 tests)</div>
+  <div class="label">Actual coverage — <span class="inline">npm run test-coverage</span> (56 tests, 11 suites)</div>
   <table>
     <thead><tr><th>Scope</th><th>% Stmts</th><th>% Branch</th><th>% Funcs</th><th>% Lines</th></tr></thead>
     <tbody>
-      <tr><td><strong>All files</strong></td><td>97.22</td><td><strong>100</strong></td><td>100</td><td>97.14</td></tr>
+      <tr><td><strong>All files</strong></td><td><strong>100</strong></td><td><strong>100</strong></td><td><strong>100</strong></td><td><strong>100</strong></td></tr>
       <tr><td class="mono">controllers</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
       <tr><td class="mono">services</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+      <tr><td class="mono">domain</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
       <tr><td class="mono">domain/errors</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
       <tr><td class="mono">seedData</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
-      <tr><td class="mono">domain</td><td>89.74</td><td>100</td><td>100</td><td>89.74</td></tr>
     </tbody>
   </table>
-  <p style="color:var(--muted)">All thresholds pass. The only sub-100 area is <span class="inline">domain</span>, dragged down by <span class="inline">foodProduct.js</span> &amp; <span class="inline">restaurant.js</span> at 0% — unused placeholder classes (see "What's left" #4). Branch coverage is a perfect 100%.</p>
+  <p style="color:var(--muted)">Now <strong>100% on every metric</strong>. The earlier sub-100 in <span class="inline">domain</span> (the unused <span class="inline">foodProduct.js</span> / <span class="inline">restaurant.js</span>) is gone — those are now real, fully-tested classes.</p>
 
   <div class="label">View the report</div>
   <pre><code>npm run test-coverage
@@ -299,20 +333,23 @@ open coverage/lcov-report/index.html</code></pre>
     <li><strong>tests + README</strong> — orderService/orderController suites, reserveStock cases, document the endpoint</li>
     <li><strong>verify</strong> — <span class="inline">npm test</span> green · <span class="inline">npm run test-coverage</span> meets thresholds · curl the order flow</li>
   </ol>
-  <p style="color:var(--muted);font-size:13px">Optional cleanups regardless: drop unused params in <span class="inline">createCartForUser</span>, align test fixture ids, decide on the <span class="inline">foodProduct</span>/<span class="inline">restaurant</span> placeholders.</p>
+  <p style="color:var(--muted);font-size:13px">Optional cleanups regardless: drop unused params in <span class="inline">createCartForUser</span>, align the <span class="inline">grocery101</span> test fixture id.</p>
 
   <h2>Verification (current build)</h2>
-  <pre><code>npm test                                                   <span class="cmt"># 32/32 green, 6 suites</span>
-npm run test-coverage                                      <span class="cmt"># thresholds met (100% branch)</span>
+  <pre><code>npm test                                                   <span class="cmt"># 56/56 green, 11 suites</span>
+npm run test-coverage                                      <span class="cmt"># 100% on every metric</span>
 npm start                                                  <span class="cmt"># port 8080</span>
 
-curl "localhost:8080/inventory/health?storeId=store101"    <span class="cmt"># → summary</span>
-curl "localhost:8080/inventory/health?storeId=nope"        <span class="cmt"># → 404</span>
-curl "localhost:8080/inventory/health"                     <span class="cmt"># → 400</span>
-curl "localhost:8080/cart/view?userId=user102"             <span class="cmt"># → cart (now bound to user102)</span>
+<span class="cmt"># grocery side</span>
+curl "localhost:8080/inventory/health?storeId=store101"    <span class="cmt"># → summary (400 if missing, 404 if unknown)</span>
+curl "localhost:8080/cart/view?userId=user102"             <span class="cmt"># → cart (bound to user102)</span>
+
+<span class="cmt"># food side</span>
+curl "localhost:8080/restaurant/menu?restaurantId=restaurant101"          <span class="cmt"># → menu</span>
+curl "localhost:8080/restaurant/menu/health?restaurantId=restaurant101"   <span class="cmt"># → availability</span>
 curl -X POST localhost:8080/cart/product -H "Content-Type: application/json" \
-  -d '{"userId":"user101","productId":"product101","outletId":"store101"}'
-<span class="cmt"># → 200; missing field → 400; unknown user/product → 404 (no stock change — by design)</span></code></pre>
+  -d '{"userId":"user101","productId":"food101","outletId":"restaurant101"}'
+<span class="cmt"># → 200, food item added through the same cart endpoint (polymorphic)</span></code></pre>
 
   <!-- ============ FURTHER IMPROVEMENTS ============ -->
   <h2>🚀 Further Improvements — next architecture horizon</h2>
