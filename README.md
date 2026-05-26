@@ -226,6 +226,70 @@ Response Body
 }
 ```
 
+### Place Order (Checkout)
+
+Creates an order from a list of line items. This is where `quantity` is supplied and
+where stock is validated and decremented — the cart endpoints stay a simple selection
+list and never touch stock. Stock is reserved **all-or-nothing**: if any line fails
+validation, no stock is decremented and no order is created.
+
+```http
+POST /orders
+Content-Type: application/json
+```
+
+Request Body
+
+```json
+{
+  "userId": "user101",
+  "items": [
+    { "productId": "product101", "outletId": "store101", "quantity": 5 }
+  ]
+}
+```
+
+Response Body — `201 Created`
+
+```json
+{
+  "orderId": "order101",
+  "userId": "user101",
+  "items": [
+    {
+      "productId": "product101",
+      "productName": "Wheat Bread",
+      "quantity": 5,
+      "unitPrice": 9.99,
+      "lineTotal": 49.95
+    }
+  ],
+  "totalAmount": 49.95,
+  "status": "CONFIRMED",
+  "createdAt": "2026-05-25T19:09:11.226Z"
+}
+```
+
+Error responses
+
+- **400 Bad Request** — missing `userId`, empty `items`, or a non-positive `quantity`
+- **404 Not Found** — the `userId` or a line item's product/store does not exist
+- **409 Conflict** — a line item requests more than the available stock
+
+```json lines
+{
+  "message": "Insufficient stock for product product101: requested 999, available 30"
+}
+```
+
+### Get Order
+
+```http
+GET /orders/<orderId>
+```
+
+Returns the order created by checkout, or **404 Not Found** if no order matches.
+
 ## Technology Stack
 
 - **Backend**: Node.js with Express.js
