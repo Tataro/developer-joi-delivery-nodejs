@@ -2,6 +2,8 @@ const Cart = require("../domain/cart");
 const GroceryStore = require("../domain/groceryStore");
 const User = require("../domain/user");
 const GroceryProduct = require("../domain/groceryProduct");
+const Restaurant = require("../domain/restaurant");
+const FoodProduct = require("../domain/foodProduct");
 
 class SeedData {
   static createCartForUser(user, firstName, lastName, cartId) {
@@ -46,6 +48,28 @@ class SeedData {
       store, // store reference
     );
   }
+
+  static createRestaurant(outletName, restaurantId, cuisineType) {
+    return new Restaurant(
+      outletName,
+      "Authentic local restaurant",
+      restaurantId,
+      cuisineType,
+    );
+  }
+
+  static createFoodProduct(productName, productId, isVegetarian, restaurant) {
+    return new FoodProduct(
+      productId,
+      productName,
+      12.0, // mrp
+      10.99, // sellingPrice
+      20, // preparationTime in minutes
+      isVegetarian, // isVegetarian
+      true, // isAvailable
+      restaurant, // restaurant reference
+    );
+  }
 }
 
 SeedData.store101 = SeedData.createStore("Fresh Picks", "store101");
@@ -72,5 +96,25 @@ SeedData.groceryProducts = [
 
 SeedData.users = [SeedData.user101, SeedData.user102];
 SeedData.stores = [SeedData.store101, SeedData.store102];
+
+// --- Food / Restaurant side (parallel to the grocery seed above) ---
+SeedData.restaurant101 = SeedData.createRestaurant(
+  "Spice Garden",
+  "restaurant101",
+  "Indian",
+);
+SeedData.restaurant102 = SeedData.createRestaurant(
+  "Pasta House",
+  "restaurant102",
+  "Italian",
+);
+
+SeedData.foodProducts = [
+  SeedData.createFoodProduct("Paneer Tikka", "food101", true, SeedData.restaurant101),
+  SeedData.createFoodProduct("Veg Biryani", "food102", true, SeedData.restaurant101),
+  SeedData.createFoodProduct("Chicken Lasagna", "food103", false, SeedData.restaurant102),
+];
+
+SeedData.restaurants = [SeedData.restaurant101, SeedData.restaurant102];
 
 module.exports = SeedData;
