@@ -226,6 +226,66 @@ Response Body
 }
 ```
 
+### Browse Restaurant Menu
+
+Lists the food items offered by a restaurant. Food items are added to the cart
+through the same `POST /cart/product` endpoint as grocery products (the cart holds
+any `Product`).
+
+```http
+GET /restaurant/menu?restaurantId=<restaurantId>
+```
+
+Response Body
+
+```json lines
+{
+  "restaurantId": "restaurant101",
+  "name": "Spice Garden",
+  "cuisineType": "Indian",
+  "menu": [
+    {
+      "productId": "food101",
+      "productName": "Paneer Tikka",
+      "mrp": 12,
+      "sellingPrice": 10.99,
+      "preparationTime": 20,
+      "isVegetarian": true,
+      "isAvailable": true,
+      "customizations": [],
+      "discount": 0
+    }
+  ]
+}
+```
+
+- **400 Bad Request** — missing `restaurantId` query parameter
+- **404 Not Found** — no restaurant matches the given `restaurantId`
+
+### Menu Availability
+
+The restaurant counterpart of Inventory Health. Food is made to order, so there is
+no counted stock — "health" is measured by how many menu items are currently
+available.
+
+```http
+GET /restaurant/menu/health?restaurantId=<restaurantId>
+```
+
+Response Body
+
+```json lines
+{
+  "restaurantId": "restaurant101",
+  "totalItems": 2,
+  "availableItems": 2,
+  "unavailableItems": 0
+}
+```
+
+- **400 Bad Request** — missing `restaurantId` query parameter
+- **404 Not Found** — no restaurant matches the given `restaurantId`
+
 ## Technology Stack
 
 - **Backend**: Node.js with Express.js

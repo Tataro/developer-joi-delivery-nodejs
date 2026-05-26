@@ -29,5 +29,17 @@ describe("ProductService", () => {
       expect(product).toBeDefined();
       expect(product.productId).toBe("product102");
     });
+
+    it("shouldReturnFoodProductWhenProductBelongsToARestaurant", () => {
+      const product = productService.getProduct("food101", "restaurant101");
+      expect(product).toBeDefined();
+      expect(product.productId).toBe("food101");
+      expect(product.restaurant.outletId).toBe("restaurant101");
+    });
+
+    it("shouldReturnUndefinedWhenFoodProductOutletDoesNotMatch", () => {
+      const product = productService.getProduct("food101", "store101");
+      expect(product).toBeUndefined();
+    });
   });
 });
