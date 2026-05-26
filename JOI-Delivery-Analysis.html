@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>JOI Delivery — Code Analysis &amp; Roadmap</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1d212b;
+    --border: #2a2f3a;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --accent: #7c9cff;
+    --green: #4ade80;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --code-bg: #0b0d12;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+  header.hero {
+    border: 1px solid var(--border);
+    background: linear-gradient(135deg, #1a1f2e, #14161c);
+    border-radius: 16px;
+    padding: 36px 32px;
+    margin-bottom: 40px;
+  }
+  header.hero h1 { margin: 0 0 8px; font-size: 30px; letter-spacing: -0.5px; }
+  header.hero p { margin: 4px 0; color: var(--muted); }
+  .tag { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--accent); margin-bottom: 14px; letter-spacing: .5px; }
+
+  h2 { font-size: 22px; margin: 44px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 17px; margin: 0 0 6px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 24px 0 8px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; text-align: center; }
+  .stat .n { font-size: 28px; font-weight: 700; }
+  .stat .l { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat.red .n { color: var(--red); }
+  .stat.amber .n { color: var(--amber); }
+  .stat.green .n { color: var(--green); }
+  .stat.accent .n { color: var(--accent); }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: 12px;
+    padding: 22px 24px;
+    margin: 18px 0;
+  }
+  .card.sev-high { border-left-color: var(--red); }
+  .card.sev-med { border-left-color: var(--amber); }
+  .card.sev-low { border-left-color: var(--accent); }
+  .card.sev-done { border-left-color: var(--green); }
+
+  .card-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 6px; letter-spacing: .4px; text-transform: uppercase; }
+  .b-high { background: rgba(248,113,113,.15); color: var(--red); border: 1px solid rgba(248,113,113,.3); }
+  .b-med { background: rgba(251,191,36,.13); color: var(--amber); border: 1px solid rgba(251,191,36,.3); }
+  .b-low { background: rgba(124,156,255,.13); color: var(--accent); border: 1px solid rgba(124,156,255,.3); }
+  .b-done { background: rgba(74,222,128,.13); color: var(--green); border: 1px solid rgba(74,222,128,.3); }
+  .file { font-family: var(--mono); font-size: 12.5px; color: var(--muted); }
+  .num { font-family: var(--mono); color: var(--muted); font-size: 13px; }
+
+  .label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin: 16px 0 6px; }
+  .label.prob { color: var(--red); }
+  .label.sol { color: var(--green); }
+
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; overflow-x: auto; margin: 8px 0; }
+  code { font-family: var(--mono); font-size: 13px; }
+  pre code { color: #d6deeb; }
+  .inline { background: var(--panel-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; font-family: var(--mono); font-size: 12.5px; color: var(--accent); }
+  .del { color: var(--red); }
+  .add { color: var(--green); }
+  .cmt { color: #5c6678; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+  td.mono { font-family: var(--mono); font-size: 12.5px; }
+
+  ol.steps { counter-reset: step; list-style: none; padding: 0; }
+  ol.steps > li { position: relative; padding: 14px 16px 14px 52px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; }
+  ol.steps > li::before { counter-increment: step; content: counter(step); position: absolute; left: 14px; top: 14px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #0b0d12; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .footer-note { color: var(--muted); font-size: 13px; margin-top: 40px; text-align: center; }
+  .new-pill { font-size: 10px; background: var(--green); color: #07140a; padding: 1px 6px; border-radius: 4px; font-weight: 700; vertical-align: middle; }
+
+  .card.sev-future { border-left-color: #c084fc; }
+  .b-future { background: rgba(192,132,252,.13); color: #c084fc; border: 1px solid rgba(192,132,252,.3); }
+  .done-pill { font-size: 10px; background: rgba(74,222,128,.18); color: var(--green); border: 1px solid rgba(74,222,128,.35); padding: 1px 7px; border-radius: 4px; font-weight: 700; vertical-align: middle; }
+  .todo-pill { font-size: 10px; background: rgba(251,191,36,.15); color: var(--amber); border: 1px solid rgba(251,191,36,.35); padding: 1px 7px; border-radius: 4px; font-weight: 700; vertical-align: middle; }
+  .phase-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 18px 0; }
+  .phase { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .phase h4 { margin: 0 0 4px; font-size: 15px; }
+  .phase .when { font-size: 11px; color: #c084fc; text-transform: uppercase; letter-spacing: .5px; }
+  .phase ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+  .phase li { margin: 4px 0; }
+  @media (max-width: 720px) { .summary-grid, .phase-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="tag">CODE ANALYSIS · PROGRESS · ROADMAP</span>
+    <h1>JOI Delivery — Node.js Backend</h1>
+    <p>Food &amp; grocery delivery platform · Express + Clean Architecture (domain / services / controllers)</p>
+    <p>Goal: <strong>complete the whole system</strong> — implement <span class="inline">/inventory/health</span>, fix latent bugs, add tests.</p>
+    <p style="font-size:13px">Status as of 2026-05-26 · reflects code on branch <span class="inline">main</span> (32/32 tests passing, coverage thresholds met)</p>
+  </header>
+
+  <div class="summary-grid">
+    <div class="stat green"><div class="n">100%</div><div class="l">scope done</div></div>
+    <div class="stat accent"><div class="n">32</div><div class="l">tests passing</div></div>
+    <div class="stat green"><div class="n">100%</div><div class="l">branch coverage</div></div>
+    <div class="stat amber"><div class="n">1</div><div class="l">deferred decision</div></div>
+  </div>
+
+  <!-- ============ COMPLETED ============ -->
+  <h2>✅ Completed so far</h2>
+  <p style="color:var(--muted)">Verified against the latest commits on <span class="inline">main</span>. The inventory feature was built with dedicated error classes (a cleaner approach than the inline <span class="inline">statusCode</span> originally suggested).</p>
+  <table>
+    <thead><tr><th>Item</th><th>Files</th><th>Commit</th></tr></thead>
+    <tbody>
+      <tr><td>Fixed default-import destructuring (<span class="inline">Product</span> / <span class="inline">Outlet</span>)</td><td class="mono">foodProduct.js, restaurant.js</td><td class="mono">0011a12</td></tr>
+      <tr><td><strong>Implemented <span class="inline">GET /inventory/health</span></strong> (summary) + error handling</td><td class="mono">inventoryService.js, inventoryController.js, domain/errors/*</td><td class="mono">763f49c</td></tr>
+      <tr><td>Inventory tests — service (3) + controller (3: 200/404/500)</td><td class="mono">inventoryService.test.js, inventoryController.test.js</td><td class="mono">763f49c</td></tr>
+      <tr><td>Seed data — added <span class="inline">user102</span>, <span class="inline">stores</span> &amp; <span class="inline">users</span> arrays</td><td class="mono">seedData.js</td><td class="mono">f99ea29</td></tr>
+      <tr><td>Test scripts — <span class="inline">--verbose</span> + <span class="inline">test-coverage</span></td><td class="mono">package.json</td><td class="mono">bda58b8</td></tr>
+      <tr><td><span class="inline">createCartForUser</span> now binds the real user object (user102's cart fixed)</td><td class="mono">seedData.js</td><td class="mono">2e934af</td></tr>
+      <tr><td>README inventory docs — <span class="inline">storeId</span> + response + 400/404</td><td class="mono">README.md</td><td class="mono">c044805</td></tr>
+      <tr><td><strong>Cart flow — validation + error handling</strong> (400 / 404 / 500 mapping)</td><td class="mono">cartService.js, cartController.js, errors/notFoundError.js</td><td class="mono">df1e726, 5dd679e</td></tr>
+      <tr><td>Unit tests for <span class="inline">productService</span> &amp; <span class="inline">userService</span></td><td class="mono">productService.test.js, userService.test.js</td><td class="mono">ae84c2b</td></tr>
+      <tr><td><strong>Coverage enforced</strong> — <span class="inline">collectCoverageFrom</span> + <span class="inline">coverageThreshold</span></td><td class="mono">jest.config.json</td><td class="mono">a32c43b</td></tr>
+    </tbody>
+  </table>
+
+  <div class="card sev-done">
+    <div class="card-head"><span class="badge b-done">Done</span><h3>How inventory health turned out</h3></div>
+    <p>Products are derived from <span class="inline">SeedData.groceryProducts</span> filtered by <span class="inline">store.outletId</span> — correctly avoiding the circular-reference trap (see caution below). Validation/lookup throw typed errors; the controller maps them to HTTP status.</p>
+    <pre><code><span class="cmt">// domain/errors/storeNotFoundError.js → statusCode 404</span>
+<span class="cmt">// domain/errors/validationError.js   → statusCode 400</span>
+
+<span class="cmt">// inventoryController.js</span>
+try {
+  const result = inventoryService.getStoreInventoryHealth(req.query.storeId);
+  return res.status(200).json(result);
+} catch (error) {
+  return res.status(error.statusCode || 500).json({ message: error.message });
+}</code></pre>
+    <p class="num">Result shape: <code>{ "storeId": "store101", "totalProducts": 3, "lowStockCount": 0, "outOfStockCount": 0 }</code></p>
+  </div>
+
+  <!-- ============ REMAINING ============ -->
+  <h2>◻️ What's left</h2>
+  <p style="color:var(--muted)">Every issue from the original scope is now resolved (see Completed above). What remains is one <strong>deferred product decision</strong> plus a few cosmetic cleanups — none are bugs.</p>
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th>Files</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td class="num">1</td><td>Quantity + stock decrement — intentionally moved to a future checkout/order endpoint</td><td class="mono">(new) orderService / orderController</td><td><span class="badge b-med">Deferred</span></td></tr>
+      <tr><td class="num">2</td><td><span class="inline">createCartForUser</span> keeps two unused params (<span class="inline">firstName</span>, <span class="inline">lastName</span>)</td><td class="mono">seedData.js</td><td><span class="badge b-low">Cosmetic</span></td></tr>
+      <tr><td class="num">3</td><td><span class="inline">cartController.test.js</span> uses fake id <span class="inline">grocery101</span> (harmless — service mocked)</td><td class="mono">cartController.test.js</td><td><span class="badge b-low">Cosmetic</span></td></tr>
+      <tr><td class="num">4</td><td><span class="inline">foodProduct.js</span> / <span class="inline">restaurant.js</span> are unused placeholders (0% coverage)</td><td class="mono">domain/*</td><td><span class="badge b-low">Dead code</span></td></tr>
+    </tbody>
+  </table>
+
+  <!-- 1 -->
+  <div class="card sev-med">
+    <div class="card-head"><span class="badge b-med">Deferred · pending product decision</span><h3>1 · Quantity &amp; stock belong in a checkout/order endpoint</h3></div>
+    <span class="file">future: src/services/orderService.js · src/controllers/orderController.js</span>
+    <div class="label prob">Decision</div>
+    <p>The cart flow deliberately does <strong>not</strong> handle <span class="inline">quantity</span> or decrement stock — <span class="inline">/cart/product</span> stays a simple selection list. Reserving stock at cart-add would lock inventory for abandoned carts. The accepted model is to handle quantity + stock at <strong>checkout</strong>, where it's a real commitment (this is Improvement C, below).</p>
+    <div class="label sol">Sketch (build once the team confirms they want it)</div>
+    <ul>
+      <li><span class="inline">POST /orders</span> takes <span class="inline">{ userId, items: [{ productId, outletId, quantity }] }</span></li>
+      <li><span class="inline">inventoryService.reserveStock(items)</span> validates + decrements stock all-or-nothing (it already owns stock)</li>
+      <li><span class="inline">orderService.checkout()</span> prices the lines, builds an <span class="inline">Order</span>, returns it</li>
+      <li>New <span class="inline">InsufficientStockError</span> → <span class="inline">409</span>; reuse <span class="inline">ValidationError</span> (400) / <span class="inline">NotFoundError</span> (404)</li>
+    </ul>
+    <p class="num">Status: prototyped once (52 tests green end-to-end), then reverted while the requirement is confirmed. The cart endpoints work without it.</p>
+  </div>
+
+  <!-- 2 -->
+  <div class="card sev-low">
+    <div class="card-head"><span class="badge b-low">Cosmetic</span><h3>2 · Minor cleanups (optional)</h3></div>
+    <ul>
+      <li><strong>Unused params</strong>: <span class="inline">createCartForUser(user, firstName, lastName, cartId)</span> — <span class="inline">firstName</span>/<span class="inline">lastName</span> are passed but ignored; drop them from the signature.</li>
+      <li><strong>Test fixture id</strong>: <span class="inline">cartController.test.js</span> uses <span class="inline">grocery101</span>; align with the seed's <span class="inline">product101</span> for clarity (passes either way since the service is mocked).</li>
+      <li><strong>Dead placeholders</strong>: <span class="inline">foodProduct.js</span> &amp; <span class="inline">restaurant.js</span> are never instantiated (only the Grocery* variants are used) → 0% coverage. Either delete them (YAGNI) or keep as scaffolding for the future restaurant/food side.</li>
+    </ul>
+  </div>
+
+  <!-- ============ DESIGN CAUTION ============ -->
+  <h2>⚠️ Design caution (applies to any future cart/order work)</h2>
+  <div class="card sev-med">
+    <h3>Do not populate <span class="inline">GroceryStore.inventory</span> Set</h3>
+    <p>Cart responses serialize <span class="inline">product.store</span>. If products were added back into the store's <span class="inline">inventory</span> Set, you'd create a circular reference:</p>
+    <pre><code>product → store → inventory → product → store → ...  💥</code></pre>
+    <p><span class="inline">res.json()</span> would throw on <span class="inline">/cart/product</span> and <span class="inline">/cart/view</span>. The inventory feature already sidesteps this by deriving products from <span class="inline">SeedData.groceryProducts</span> — keep it that way and leave the <span class="inline">inventory</span> Set empty.</p>
+  </div>
+
+  <!-- ============ TEST PLAN ============ -->
+  <h2>🧪 Test Plan</h2>
+  <p style="color:var(--muted)">Layering: <strong>controller tests</strong> mock the service to verify input/output forwarding + status mapping; <strong>service tests</strong> exercise the real logic, mocking the layer below (<span class="inline">SeedData</span>, <span class="inline">userService</span>, etc.).</p>
+
+  <div class="card sev-done">
+    <div class="card-head"><span class="badge b-done">Done</span><h3>inventoryService.test.js + inventoryController.test.js</h3></div>
+    <table>
+      <thead><tr><th>Test</th><th>Covers</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>service · returns health (mixed)</td><td>healthy/low/out counts via mocked SeedData</td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>service · missing storeId</td><td>throws <span class="inline">ValidationError</span></td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>service · store not found</td><td>throws <span class="inline">StoreNotFoundError</span></td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>controller · 200 / 404 / 500</td><td>status mapping + <span class="inline">{ message }</span> body</td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>service · empty store (exists, 0 products)</td><td>total 0, all counts 0 (e.g. store102)</td><td><span class="todo-pill">NICE-TO-ADD</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card sev-done">
+    <div class="card-head"><span class="badge b-done">Done</span><h3>cartService.test.js</h3><span class="done-pill">8 cases</span></div>
+    <span class="file">mock: userService, productService · seeds cartService.userCarts in beforeEach</span>
+    <table>
+      <thead><tr><th>Test case</th><th>Asserts</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>missing request / userId / productId / outletId</td><td>throws <span class="inline">ValidationError</span> (4 cases)</td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>user not found / product not found</td><td>throws <span class="inline">NotFoundError</span></td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>success</td><td>product added, returns <span class="inline">{ cart, product, sellingPrice }</span></td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>getCartForUser · found / user missing</td><td>returns cart · throws <span class="inline">NotFoundError</span></td><td><span class="done-pill">DONE</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card sev-done">
+    <div class="card-head"><span class="badge b-done">Done</span><h3>cartController.test.js + productService/userService.test.js</h3></div>
+    <table>
+      <thead><tr><th>Suite</th><th>Covers</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>cartController · addProductToCart</td><td>200 success + 400 / 404 (user) / 404 (product) / 500 mapping</td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>cartController · viewCart</td><td>200 success + 500 mapping</td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>productService.getProduct</td><td>match / no id / no outlet / neither / second product (5)</td><td><span class="done-pill">DONE</span></td></tr>
+        <tr><td>userService.fetchUserById</td><td>found / missing / second user / undefined / null (5)</td><td><span class="done-pill">DONE</span></td></tr>
+      </tbody>
+    </table>
+    <p class="num">Remaining cosmetic: cartController fixtures still use <span class="inline">grocery101</span> (mocked, harmless).</p>
+  </div>
+
+  <!-- ============ COVERAGE ============ -->
+  <h2>📊 Test Coverage</h2>
+  <p style="color:var(--muted)">Coverage is now <strong>configured and enforced</strong> <span class="done-pill">DONE</span> — thresholds are met, so a regression below them fails the run.</p>
+
+  <div class="label">Configured in jest.config.json <span class="done-pill">DONE · a32c43b</span></div>
+  <pre><code>{
+  "collectCoverageFrom": ["src/**/*.js", "!src/app.js", "!src/**/*.test.js"],
+  "coverageThreshold": {
+    "global": { "branches": 80, "functions": 90, "lines": 90, "statements": 90 }
+  }
+}</code></pre>
+
+  <div class="label">Actual coverage — <span class="inline">npm run test-coverage</span> (32 tests)</div>
+  <table>
+    <thead><tr><th>Scope</th><th>% Stmts</th><th>% Branch</th><th>% Funcs</th><th>% Lines</th></tr></thead>
+    <tbody>
+      <tr><td><strong>All files</strong></td><td>97.22</td><td><strong>100</strong></td><td>100</td><td>97.14</td></tr>
+      <tr><td class="mono">controllers</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+      <tr><td class="mono">services</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+      <tr><td class="mono">domain/errors</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+      <tr><td class="mono">seedData</td><td>100</td><td>100</td><td>100</td><td>100</td></tr>
+      <tr><td class="mono">domain</td><td>89.74</td><td>100</td><td>100</td><td>89.74</td></tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted)">All thresholds pass. The only sub-100 area is <span class="inline">domain</span>, dragged down by <span class="inline">foodProduct.js</span> &amp; <span class="inline">restaurant.js</span> at 0% — unused placeholder classes (see "What's left" #4). Branch coverage is a perfect 100%.</p>
+
+  <div class="label">View the report</div>
+  <pre><code>npm run test-coverage
+<span class="cmt"># terminal summary + HTML report at coverage/lcov-report/index.html</span>
+open coverage/lcov-report/index.html</code></pre>
+  <p style="color:var(--muted)">The <strong>% Branch</strong> column tells you whether every fork (if / throw / default) is tested — here it's 100%. <span class="inline">.gitignore</span> already ignores <span class="inline">coverage/</span> ✅</p>
+
+  <!-- ============ EXECUTION ORDER ============ -->
+  <h2>If/when the deferred checkout endpoint is approved</h2>
+  <p style="color:var(--muted)">The core scope is complete. These steps only apply if the team decides to build the quantity + stock checkout flow (#1 in "What's left").</p>
+  <ol class="steps">
+    <li><strong>domain</strong> — add <span class="inline">order.js</span> + <span class="inline">errors/insufficientStockError.js</span> (409)</li>
+    <li><strong>inventoryService.js</strong> — add <span class="inline">reserveStock(items)</span>: validate all lines, then decrement (all-or-nothing)</li>
+    <li><strong>orderService.js + orderController.js</strong> — <span class="inline">checkout()</span> orchestrates user lookup → reserve → price → create <span class="inline">Order</span></li>
+    <li><strong>app.js</strong> — wire <span class="inline">POST /orders</span> (and optionally <span class="inline">GET /orders/:id</span>)</li>
+    <li><strong>tests + README</strong> — orderService/orderController suites, reserveStock cases, document the endpoint</li>
+    <li><strong>verify</strong> — <span class="inline">npm test</span> green · <span class="inline">npm run test-coverage</span> meets thresholds · curl the order flow</li>
+  </ol>
+  <p style="color:var(--muted);font-size:13px">Optional cleanups regardless: drop unused params in <span class="inline">createCartForUser</span>, align test fixture ids, decide on the <span class="inline">foodProduct</span>/<span class="inline">restaurant</span> placeholders.</p>
+
+  <h2>Verification (current build)</h2>
+  <pre><code>npm test                                                   <span class="cmt"># 32/32 green, 6 suites</span>
+npm run test-coverage                                      <span class="cmt"># thresholds met (100% branch)</span>
+npm start                                                  <span class="cmt"># port 8080</span>
+
+curl "localhost:8080/inventory/health?storeId=store101"    <span class="cmt"># → summary</span>
+curl "localhost:8080/inventory/health?storeId=nope"        <span class="cmt"># → 404</span>
+curl "localhost:8080/inventory/health"                     <span class="cmt"># → 400</span>
+curl "localhost:8080/cart/view?userId=user102"             <span class="cmt"># → cart (now bound to user102)</span>
+curl -X POST localhost:8080/cart/product -H "Content-Type: application/json" \
+  -d '{"userId":"user101","productId":"product101","outletId":"store101"}'
+<span class="cmt"># → 200; missing field → 400; unknown user/product → 404 (no stock change — by design)</span></code></pre>
+
+  <!-- ============ FURTHER IMPROVEMENTS ============ -->
+  <h2>🚀 Further Improvements — next architecture horizon</h2>
+  <p style="color:var(--muted)">These are <strong>beyond the "complete the system" scope above</strong> — directions to make JOI production-ready and able to scale toward its business goals (real-time tracking, partner ecosystem, sub-45-minute delivery).</p>
+
+  <!-- A. JWT AUTH -->
+  <div class="card sev-future">
+    <div class="card-head"><span class="badge b-future">Security · do first</span><h3>A · JWT authentication (replace userId in the request)</h3></div>
+    <div class="label prob">Problem today</div>
+    <p>The client sends <span class="inline">userId</span> directly in the body/query, so anyone can <strong>impersonate another user</strong> (Broken Object Level Authorization / IDOR). There is no identity verification — passing <span class="inline">userId:"user101"</span> grants access to that user's cart.</p>
+    <div class="label sol">Approach</div>
+    <ul>
+      <li><strong>Login</strong>: <span class="inline">POST /auth/login</span> verifies the password (hashed with <span class="inline">bcrypt</span>) → issues a short-lived <strong>access token</strong> (JWT, ~15 min) + a <strong>refresh token</strong> (~7 days, httpOnly cookie, rotatable)</li>
+      <li>Every authenticated request sends <span class="inline">Authorization: Bearer &lt;token&gt;</span></li>
+      <li><strong>authMiddleware</strong> verifies signature + expiry → attaches <span class="inline">req.user = { userId, roles }</span> from the claims</li>
+      <li>Controllers/services stop reading <span class="inline">userId</span> from the body → use the trusted <span class="inline">req.user.userId</span></li>
+      <li><strong>RBAC</strong>: roles <span class="inline">customer</span> / <span class="inline">store_owner</span> / <span class="inline">delivery_partner</span> / <span class="inline">admin</span> + a guard middleware (e.g. restrict <span class="inline">/inventory/health</span> to that store's owner / admin)</li>
+      <li><strong>Secret</strong> in env / KMS with key rotation; use <span class="inline">jsonwebtoken</span></li>
+    </ul>
+    <pre><code><span class="cmt">// middleware/auth.js</span>
+const jwt = require("jsonwebtoken");
+function authenticate(req, res, next) {
+  const token = (req.headers.authorization || "").replace("Bearer ", "");
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET); <span class="cmt">// { userId, roles }</span>
+    next();
+  } catch {
+    res.status(401).json({ message: "Invalid or expired token" });
+  }
+}
+
+<span class="cmt">// app.js — attach middleware</span>
+app.post("/cart/product", authenticate, cartController.addProductToCart);
+
+<span class="cmt">// cartController.js — stop trusting userId from the body</span>
+addProductToCart(req, res) {
+  const result = cartService.addProductToCartForUser({ ...req.body, userId: req.user.userId });
+  ...
+}</code></pre>
+    <p class="num">API impact: <span class="inline">POST /cart/product</span> no longer sends <span class="inline">userId</span> · <span class="inline">GET /cart/view</span> drops <span class="inline">?userId=</span> (derived from the token) · <span class="inline">401/403</span> become standard responses.</p>
+  </div>
+
+  <!-- B. MICROSERVICES -->
+  <div class="card sev-future">
+    <div class="card-head"><span class="badge b-future">Architecture</span><h3>B · Split into microservices by bounded context</h3></div>
+    <div class="label prob">Problem today</div>
+    <p>It's a single monolith — cart, product, inventory, and user all live in one process; you can't deploy or scale them independently, and teams collide in the same code. This becomes a bottleneck as it grows.</p>
+    <div class="label sol">Service decomposition</div>
+    <table>
+      <thead><tr><th>Service</th><th>Responsibility</th><th>Own DB</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">auth / identity</td><td>users, login, issue/verify JWT, roles</td><td>users</td></tr>
+        <tr><td class="mono">catalog</td><td>product/store data, search, pricing</td><td>products, stores</td></tr>
+        <tr><td class="mono">inventory</td><td>stock, reserve/decrement, inventory health</td><td>stock_levels</td></tr>
+        <tr><td class="mono">cart</td><td>per-user carts</td><td>carts</td></tr>
+        <tr><td class="mono">order</td><td>create/track orders, orchestrate checkout</td><td>orders</td></tr>
+        <tr><td class="mono">delivery</td><td>rider matching, real-time location tracking</td><td>deliveries</td></tr>
+        <tr><td class="mono">payment</td><td>payments, refunds (calls external gateway)</td><td>transactions</td></tr>
+        <tr><td class="mono">notification</td><td>push / SMS / email status updates</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:14px">An <strong>API Gateway</strong> sits in front: routing, centralized JWT verification, rate limiting, TLS termination. <strong>Database-per-service</strong> (no service touches another's DB directly).</p>
+    <pre><code>                         ┌──────────────┐
+   client ──HTTPS──▶      │ API Gateway  │  (auth, routing, rate-limit)
+                         └──────┬───────┘
+        ┌────────────┬─────────┼──────────┬─────────────┐
+        ▼            ▼         ▼          ▼             ▼
+     ┌──────┐   ┌────────┐ ┌──────┐  ┌───────┐    ┌──────────┐
+     │ auth │   │catalog │ │ cart │  │ order │    │ delivery │
+     └──────┘   └────────┘ └──┬───┘  └───┬───┘    └────┬─────┘
+                              │          │             │
+                              ▼   event bus (Kafka / RabbitMQ)   ▼
+                       OrderPlaced · StockReserved · DeliveryAssigned · PaymentCaptured</code></pre>
+    <ul>
+      <li><strong>Sync</strong> (REST/gRPC) for queries needing an immediate answer (cart asking catalog for a price)</li>
+      <li><strong>Async events</strong> (Kafka/RabbitMQ) for state changes to reduce coupling: order emits <span class="inline">OrderPlaced</span> → inventory reserves stock, delivery assigns a rider, notification informs the customer</li>
+      <li><strong>Saga pattern</strong> for cross-service transactions (order → payment → inventory) with compensating actions when a step fails — instead of distributed transactions</li>
+      <li><strong>Contract testing</strong> (Pact) between services to catch breaking changes when deploying independently</li>
+    </ul>
+  </div>
+
+  <!-- C. PERSISTENCE -->
+  <div class="card sev-future">
+    <div class="card-head"><span class="badge b-future">Data</span><h3>C · Real persistence + stock correctness</h3></div>
+    <ul>
+      <li>Replace <span class="inline">SeedData</span> (in-memory, lost on restart) with a real DB — PostgreSQL (users/stores/products/carts/orders) behind a <strong>Repository pattern</strong> + a migration tool</li>
+      <li><strong>Stock decrement race condition</strong>: an in-memory <span class="inline">availableStock -= qty</span> isn't atomic — two concurrent requests can drive stock negative → use an atomic update such as <span class="inline">UPDATE ... SET stock = stock - $qty WHERE id = $id AND stock &gt;= $qty</span> (check affected rows) or optimistic locking (a version column)</li>
+      <li>Revisit <strong>reserve-on-cart-add</strong>: stock is usually reserved at <strong>checkout / order creation</strong>, not when an item is added to the cart (otherwise abandoned carts lock stock) — consider reservations with a TTL</li>
+      <li><strong>Redis</strong>: cache the catalog + hold cart sessions (read-heavy / change-heavy)</li>
+    </ul>
+  </div>
+
+  <!-- D. CROSS-CUTTING -->
+  <div class="card sev-future">
+    <div class="card-head"><span class="badge b-future">Cross-cutting</span><h3>D · Production quality (doable while still a monolith)</h3></div>
+    <table>
+      <thead><tr><th>Area</th><th>Add</th></tr></thead>
+      <tbody>
+        <tr><td>Input validation</td><td>schema validation on every endpoint with <span class="inline">Joi</span> (on-theme with the project name!) — reject malformed payloads with 400 before they reach the service</td></tr>
+        <tr><td>API contract</td><td>versioning (<span class="inline">/v1</span>) + auto-generated OpenAPI/Swagger docs</td></tr>
+        <tr><td>Observability</td><td>structured logging (<span class="inline">pino</span>) instead of <span class="inline">console.log</span> · distributed tracing (OpenTelemetry) · metrics (Prometheus) · <span class="inline">/health</span> + <span class="inline">/ready</span> probes</td></tr>
+        <tr><td>Resilience</td><td>rate limiting · circuit breakers (cross-service calls) · retries + timeouts · <strong>idempotency keys</strong> for checkout/payment</td></tr>
+        <tr><td>Real-time tracking</td><td>WebSocket / SSE for live order status + rider location (matches the README's selling point)</td></tr>
+        <tr><td>Config &amp; secrets</td><td>config via env (<span class="inline">dotenv</span>) + a secrets manager — nothing hardcoded</td></tr>
+        <tr><td>Deploy</td><td>a Docker image per service · Kubernetes · CI/CD pipeline (lint → test → coverage gate → build → deploy)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ROADMAP -->
+  <h3 style="margin-top:28px">A sequenced roadmap</h3>
+  <div class="phase-grid">
+    <div class="phase">
+      <div class="when">Phase 1 · harden the monolith</div>
+      <h4>Harden</h4>
+      <ul>
+        <li>JWT auth + RBAC</li>
+        <li>real DB + repositories</li>
+        <li>Joi validation</li>
+        <li>structured logging + /health</li>
+      </ul>
+    </div>
+    <div class="phase">
+      <div class="when">Phase 2 · extract services</div>
+      <h4>Extract</h4>
+      <ul>
+        <li>API Gateway</li>
+        <li>peel off auth / catalog / inventory first</li>
+        <li>DB-per-service</li>
+        <li>contract testing</li>
+      </ul>
+    </div>
+    <div class="phase">
+      <div class="when">Phase 3 · event-driven scale</div>
+      <h4>Scale</h4>
+      <ul>
+        <li>event bus + saga</li>
+        <li>order / delivery / payment</li>
+        <li>real-time tracking</li>
+        <li>tracing + metrics + autoscale</li>
+      </ul>
+    </div>
+  </div>
+  <p style="color:var(--muted);font-size:13px">Principle: <strong>don't jump straight to microservices</strong> — get the bounded contexts clean inside the monolith in Phase 1, then split along the seams once they've stabilized. This avoids paying the distributed-systems tax before you need to.</p>
+
+  <p class="footer-note">Generated by Claude Code · updated 2026-05-26 · top = complete-the-system work · bottom = next horizon</p>
+
+</div>
+</body>
+</html>
