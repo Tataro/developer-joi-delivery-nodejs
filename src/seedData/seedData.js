@@ -68,4 +68,6 @@ SeedData.groceryProducts = [
 
 SeedData.users = [SeedData.user101];
 
+SeedData.stores = [SeedData.store101, SeedData.store102];
+
 module.exports = SeedData;

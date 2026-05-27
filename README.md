@@ -196,16 +196,27 @@ Response Body
 ### Inventory Health
 
 ```http
-GET /inventory/health?storeid=<storeid>
+GET /inventory/health?storeId=store101
 ```
+
+Returns a stock-health summary for the store: a count of healthy products
+plus the products that are low on stock (`availableStock <= threshold`) or
+out of stock (`availableStock === 0`).
 
 Response Body
 
-```json lines
+```json
 {
-  // to be implemented.
+  "storeId": "store101",
+  "storeName": "Fresh Picks",
+  "totalProducts": 3,
+  "healthyCount": 3,
+  "lowStock": [],
+  "outOfStock": []
 }
 ```
+
+Returns `404` if the store does not exist and `400` if `storeId` is missing.
 
 ## Technology Stack
 
