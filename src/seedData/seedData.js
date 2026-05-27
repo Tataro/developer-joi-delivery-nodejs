@@ -4,8 +4,9 @@ const User = require("../domain/user");
 const GroceryProduct = require("../domain/groceryProduct");
 
 class SeedData {
-  static createCartForUser(userId, firstName, lastName, cartId) {
-    return new Cart(cartId, SeedData.store101, SeedData.user101);
+  static createCartForUser(cartId, user) {
+    // A freshly seeded cart has no outlet until the user adds a product.
+    return new Cart(cartId, null, user);
   }
 
   static createStore(outletName, storeId) {
@@ -51,13 +52,11 @@ class SeedData {
 SeedData.store101 = SeedData.createStore("Fresh Picks", "store101");
 SeedData.store102 = SeedData.createStore("Natural Choice", "store102");
 SeedData.user101 = SeedData.createUser("user101", "John", "Doe");
+SeedData.user102 = SeedData.createUser("user102", "Rachel", "Zane");
 
 SeedData.cartForUsers = new Map([
-  ["user101", SeedData.createCartForUser("user101", "John", "Doe", "cart101")],
-  [
-    "user102",
-    SeedData.createCartForUser("user102", "Rachel", "Zane", "cart102"),
-  ],
+  ["user101", SeedData.createCartForUser("cart101", SeedData.user101)],
+  ["user102", SeedData.createCartForUser("cart102", SeedData.user102)],
 ]);
 
 SeedData.groceryProducts = [
@@ -66,7 +65,7 @@ SeedData.groceryProducts = [
   SeedData.createGroceryProduct("Crackers", "product103", SeedData.store101),
 ];
 
-SeedData.users = [SeedData.user101];
+SeedData.users = [SeedData.user101, SeedData.user102];
 
 SeedData.stores = [SeedData.store101, SeedData.store102];
 
