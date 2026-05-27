@@ -2,6 +2,8 @@ const Cart = require("../domain/cart");
 const GroceryStore = require("../domain/groceryStore");
 const User = require("../domain/user");
 const GroceryProduct = require("../domain/groceryProduct");
+const Restaurant = require("../domain/restaurant");
+const FoodProduct = require("../domain/foodProduct");
 
 class SeedData {
   static createCartForUser(cartId, user) {
@@ -47,10 +49,28 @@ class SeedData {
       store // store reference
     );
   }
+
+  static createRestaurant(outletName, outletId) {
+    return new Restaurant(outletName, "Local favourite restaurant", outletId);
+  }
+
+  static createFoodProduct(productName, productId, restaurant) {
+    return new FoodProduct(
+      productId,
+      productName,
+      8.0, // mrp
+      7.5, // sellingPrice
+      true, // isVeg
+      20, // prepTimeMins
+      50, // availableStock
+      restaurant // restaurant reference
+    );
+  }
 }
 
 SeedData.store101 = SeedData.createStore("Fresh Picks", "store101");
 SeedData.store102 = SeedData.createStore("Natural Choice", "store102");
+SeedData.rest101 = SeedData.createRestaurant("Tasty Bites", "rest101");
 SeedData.user101 = SeedData.createUser("user101", "John", "Doe");
 SeedData.user102 = SeedData.createUser("user102", "Rachel", "Zane");
 
@@ -63,6 +83,12 @@ SeedData.groceryProducts = [
   SeedData.createGroceryProduct("Wheat Bread", "product101", SeedData.store101),
   SeedData.createGroceryProduct("Spinach", "product102", SeedData.store101),
   SeedData.createGroceryProduct("Crackers", "product103", SeedData.store101),
+];
+
+SeedData.foodProducts = [
+  SeedData.createFoodProduct("Margherita Pizza", "food201", SeedData.rest101),
+  SeedData.createFoodProduct("Veg Burger", "food202", SeedData.rest101),
+  SeedData.createFoodProduct("Pasta Alfredo", "food203", SeedData.rest101),
 ];
 
 SeedData.users = [SeedData.user101, SeedData.user102];

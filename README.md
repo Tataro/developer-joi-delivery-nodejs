@@ -60,6 +60,24 @@ Dummy Products for Stores to sell and users to buy from.
 | product102 | Spinach     | Grocery | store101   | 10.50 | 0.5kg  | 30    |
 | product103 | Crackers    | Grocery | store101   | 10.50 | 0.5kg  | 30    |
 
+### Restaurants
+
+Sample restaurant seeded for development purposes only.
+
+| OutletId | OutletName  | Type       | Description                |
+| -------- | ----------- | ---------- | -------------------------- |
+| rest101  | Tasty Bites | Restaurant | Local favourite restaurant |
+
+### Food Products
+
+Dummy food items for restaurants to sell and users to order.
+
+| ProductId | ProductName      | RestaurantRefId | MRP  | SellingPrice | Veg |
+| --------- | ---------------- | --------------- | ---- | ------------ | --- |
+| food201   | Margherita Pizza | rest101         | 8.00 | 7.50         | Yes |
+| food202   | Veg Burger       | rest101         | 8.00 | 7.50         | Yes |
+| food203   | Pasta Alfredo    | rest101         | 8.00 | 7.50         | Yes |
+
 ## Requirements
 
 The project requires [Node v22](https://nodejs.org/).
@@ -126,6 +144,9 @@ Request Body
   "outletId": "store101"
 }
 ```
+
+The same endpoint accepts restaurant food items — e.g. `productId: "food201"`
+with `outletId: "rest101"`.
 
 Response Body
 

@@ -33,4 +33,16 @@ describe("SeedData", () => {
       expect(cart102.products).toEqual([]);
     });
   });
+
+  describe("food catalogue", () => {
+    it("seeds a restaurant with food products that reference it", () => {
+      expect(SeedData.rest101.outletId).toBe("rest101");
+      expect(SeedData.foodProducts.length).toBeGreaterThan(0);
+
+      SeedData.foodProducts.forEach((food) => {
+        expect(food.restaurant).toBe(SeedData.rest101);
+        expect(typeof food.sellingPrice).toBe("number");
+      });
+    });
+  });
 });
