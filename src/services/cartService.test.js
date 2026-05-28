@@ -1,17 +1,20 @@
 const cartService = require("./cartService");
 const NotFoundError = require("../domain/errors/notFoundError");
+const ValidationError = require("../domain/errors/validationError");
 const SeedData = require("../seedData/seedData");
 
 describe("cartService", () => {
   beforeEach(() => {
     cartService.userCarts = new Map();
     SeedData.cartForUsers.forEach((cart, userId) => {
+      // Reset to a clean cart so line items don't accumulate across tests.
+      cart.products = [];
       cartService.userCarts.set(userId, cart);
     });
   });
 
   describe("addProductToCartForUser", () => {
-    it("shouldAddTheProductToTheUsersCart", () => {
+    it("shouldAddTheProductAsALineItemWithDefaultQuantityOne", () => {
       const result = cartService.addProductToCartForUser({
         userId: "user101",
         productId: "product101",
@@ -19,8 +22,53 @@ describe("cartService", () => {
       });
 
       expect(result.product.productId).toBe("product101");
-      expect(result.cart.products).toContain(result.product);
+      expect(result.cart.products).toHaveLength(1);
+      expect(result.cart.products[0].product.productId).toBe("product101");
+      expect(result.cart.products[0].quantity).toBe(1);
     });
+
+    it("shouldUseTheRequestedQuantity", () => {
+      const result = cartService.addProductToCartForUser({
+        userId: "user101",
+        productId: "product101",
+        outletId: "store101",
+        quantity: 3,
+      });
+
+      expect(result.cart.products[0].quantity).toBe(3);
+    });
+
+    it("shouldMergeQuantityWhenTheSameProductIsAddedAgain", () => {
+      cartService.addProductToCartForUser({
+        userId: "user101",
+        productId: "product101",
+        outletId: "store101",
+        quantity: 2,
+      });
+      const result = cartService.addProductToCartForUser({
+        userId: "user101",
+        productId: "product101",
+        outletId: "store101",
+        quantity: 3,
+      });
+
+      expect(result.cart.products).toHaveLength(1);
+      expect(result.cart.products[0].quantity).toBe(5);
+    });
+
+    it.each([0, -2, 1.5])(
+      "shouldThrowValidationErrorForInvalidQuantity %p",
+      (quantity) => {
+        expect(() =>
+          cartService.addProductToCartForUser({
+            userId: "user101",
+            productId: "product101",
+            outletId: "store101",
+            quantity,
+          })
+        ).toThrow(ValidationError);
+      }
+    );
 
     it("shouldThrowNotFoundErrorWhenUserDoesNotExist", () => {
       expect(() =>
