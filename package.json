@@ -10,6 +10,9 @@
   },
   "author": "JOI Delivery Team",
   "license": "ISC",
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "express": "^4.17.1"
   },

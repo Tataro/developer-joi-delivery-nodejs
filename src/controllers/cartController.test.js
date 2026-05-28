@@ -25,7 +25,7 @@ describe("CartController", () => {
     it("shouldAddTheRequestedProductToTheCart", () => {
       const addProductRequest = {
         userId: "user101",
-        productId: "grocery101",
+        productId: "product101",
         outletId: "store101",
         quantity: 2,
       };
@@ -34,8 +34,8 @@ describe("CartController", () => {
 
       const expectedResult = {
         cart: { products: [] },
-        product: { productId: "grocery101", name: "Organic Bananas" },
-        sellingPrice: 3.49,
+        product: { productId: "product101", productName: "Wheat Bread" },
+        sellingPrice: 9.99,
       };
 
       const cartService = require("../services/cartService");
@@ -80,9 +80,11 @@ describe("CartController", () => {
         cartId: "cart101",
         userId: "user101",
         products: [
-          { productId: "grocery101", name: "Organic Bananas", quantity: 2 },
+          {
+            product: { productId: "product101", productName: "Wheat Bread" },
+            quantity: 2,
+          },
         ],
-        total: 6.98,
       };
 
       const cartService = require("../services/cartService");

@@ -47,6 +47,16 @@ describe("SeedData", () => {
     });
   });
 
+  describe("stores", () => {
+    it("shouldGiveEachStoreItsOwnDescription", () => {
+      const store101 = SeedData.stores.find((s) => s.outletId === "store101");
+      const store102 = SeedData.stores.find((s) => s.outletId === "store102");
+
+      expect(store101.description).toBe("Premium grocery store");
+      expect(store102.description).toBe("Health-focused grocery store");
+    });
+  });
+
   describe("store inventory", () => {
     it("shouldPopulateEachStoreWithItsOwnProducts", () => {
       const productIds = Array.from(SeedData.store101.inventory).map(
