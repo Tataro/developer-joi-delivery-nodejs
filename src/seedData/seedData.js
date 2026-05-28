@@ -5,7 +5,7 @@ const GroceryProduct = require("../domain/groceryProduct");
 
 class SeedData {
   static createCartForUser(user, cartId) {
-    return new Cart(cartId, SeedData.store101, user);
+    return new Cart(cartId, null, user);
   }
 
   static createStore(outletName, storeId) {

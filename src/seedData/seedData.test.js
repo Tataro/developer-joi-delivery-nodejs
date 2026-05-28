@@ -39,5 +39,11 @@ describe("SeedData", () => {
       expect(cart102.cartId).toBe("cart102");
       expect(cart102.user.userId).toBe("user102");
     });
+
+    it("shouldStartWithNoOutletSelected", () => {
+      const cart101 = SeedData.cartForUsers.get("user101");
+
+      expect(cart101.outlet).toBeNull();
+    });
   });
 });
