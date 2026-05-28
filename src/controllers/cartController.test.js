@@ -21,6 +21,39 @@ describe("CartController", () => {
   });
 
   describe("addProductToCart", () => {
+    it("should return 400 when service throws ValidationError", () => {
+      const cartService = require("../services/cartService");
+      const err = new Error("userId is required");
+      err.statusCode = 400;
+      cartService.addProductToCartForUser.mockImplementation(() => { throw err; });
+
+      cartController.addProductToCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.json).toHaveBeenCalledWith({ error: "userId is required" });
+    });
+
+    it("should return 404 when service throws NotFoundError", () => {
+      const cartService = require("../services/cartService");
+      const err = new Error("User not found");
+      err.statusCode = 404;
+      cartService.addProductToCartForUser.mockImplementation(() => { throw err; });
+
+      cartController.addProductToCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockRes.json).toHaveBeenCalledWith({ error: "User not found" });
+    });
+
+    it("should return 500 when service throws unexpected error", () => {
+      const cartService = require("../services/cartService");
+      cartService.addProductToCartForUser.mockImplementation(() => { throw new Error("Unexpected"); });
+
+      cartController.addProductToCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+    });
+
     it("shouldAddTheRequestedProductToTheCart", () => {
       const addProductRequest = {
         userId: "user101",
@@ -51,6 +84,38 @@ describe("CartController", () => {
   });
 
   describe("viewCart", () => {
+    it("should return 400 when service throws ValidationError", () => {
+      const cartService = require("../services/cartService");
+      const err = new Error("userId is required");
+      err.statusCode = 400;
+      cartService.getCartForUser.mockImplementation(() => { throw err; });
+
+      cartController.viewCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.json).toHaveBeenCalledWith({ error: "userId is required" });
+    });
+
+    it("should return 404 when service throws NotFoundError", () => {
+      const cartService = require("../services/cartService");
+      const err = new Error("Cart not found");
+      err.statusCode = 404;
+      cartService.getCartForUser.mockImplementation(() => { throw err; });
+
+      cartController.viewCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(404);
+    });
+
+    it("should return 500 when service throws unexpected error", () => {
+      const cartService = require("../services/cartService");
+      cartService.getCartForUser.mockImplementation(() => { throw new Error("Unexpected"); });
+
+      cartController.viewCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(500);
+    });
+
     it("shouldReturnTheCart", () => {
       const userId = "user101";
       mockReq.query = { userId };
