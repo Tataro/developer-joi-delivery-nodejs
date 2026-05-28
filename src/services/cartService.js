@@ -2,6 +2,7 @@ const userService = require("./userService");
 const productService = require("./productService");
 const ValidationError = require("../domain/errors/validationError");
 const NotFoundError = require("../domain/errors/notFoundError");
+const InsufficientStockError = require("../domain/errors/insufficientStockError");
 
 const cartService = {
   userCarts: new Map(),
@@ -22,6 +23,12 @@ const cartService = {
       throw new ValidationError("outletId is required");
     }
 
+    const quantity =
+      addProductRequest.quantity === undefined ? 1 : addProductRequest.quantity;
+    if (!Number.isInteger(quantity) || quantity <= 0) {
+      throw new ValidationError("quantity must be a positive integer");
+    }
+
     const user = userService.fetchUserById(userId);
     if (!user) {
       throw new NotFoundError(`User '${userId}' not found`);
@@ -39,10 +46,29 @@ const cartService = {
       );
     }
 
-    cart.products.push(product);
+    if (quantity > product.availableStock) {
+      throw new InsufficientStockError(
+        `Only ${product.availableStock} unit(s) of '${productId}' available`
+      );
+    }
+
+    // Reserve the stock and merge into the existing line item, if any.
+    product.availableStock -= quantity;
+
+    let lineItem = cart.products.find(
+      (item) => item.product.productId === product.productId
+    );
+    if (lineItem) {
+      lineItem.quantity += quantity;
+    } else {
+      lineItem = { product, quantity };
+      cart.products.push(lineItem);
+    }
+
     return {
       cart: cart,
       product: product,
+      quantity: lineItem.quantity,
       sellingPrice: product.sellingPrice,
     };
   },

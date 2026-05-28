@@ -3,18 +3,27 @@ const userService = require("./userService");
 const productService = require("./productService");
 const ValidationError = require("../domain/errors/validationError");
 const NotFoundError = require("../domain/errors/notFoundError");
+const InsufficientStockError = require("../domain/errors/insufficientStockError");
 
 jest.mock("./userService");
 jest.mock("./productService");
 
 const mockUser = { userId: "user-1" };
-const mockProduct = { productId: "prod-1", sellingPrice: 9.99 };
-const mockCart = { products: [] };
+let mockProduct;
+let mockCart;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockProduct = {
+    productId: "prod-1",
+    productName: "Test Product",
+    sellingPrice: 9.99,
+    availableStock: 10,
+  };
+  mockCart = { products: [] };
   cartService.userCarts = new Map([["user-1", mockCart]]);
-  mockCart.products = [];
+  userService.fetchUserById.mockReturnValue(mockUser);
+  productService.getProduct.mockReturnValue(mockProduct);
 });
 
 describe("CartService", () => {
@@ -52,6 +61,24 @@ describe("CartService", () => {
       ).toThrow(ValidationError);
     });
 
+    it("shouldThrowValidationErrorIfQuantityIsNotAPositiveInteger", () => {
+      const request = {
+        userId: "user-1",
+        productId: "prod-1",
+        outletId: "outlet-1",
+      };
+
+      expect(() =>
+        cartService.addProductToCartForUser({ ...request, quantity: 0 })
+      ).toThrow(ValidationError);
+      expect(() =>
+        cartService.addProductToCartForUser({ ...request, quantity: -2 })
+      ).toThrow(ValidationError);
+      expect(() =>
+        cartService.addProductToCartForUser({ ...request, quantity: 1.5 })
+      ).toThrow(ValidationError);
+    });
+
     it("shouldThrowNotFoundErrorIfUserNotFound", () => {
       userService.fetchUserById.mockReturnValue(null);
 
@@ -77,7 +104,6 @@ describe("CartService", () => {
     });
 
     it("shouldThrowNotFoundErrorIfProductNotFound", () => {
-      userService.fetchUserById.mockReturnValue(mockUser);
       productService.getProduct.mockReturnValue(null);
 
       expect(() =>
@@ -89,10 +115,22 @@ describe("CartService", () => {
       ).toThrow(NotFoundError);
     });
 
-    it("shouldReturnCartAndProductOnSuccess", () => {
-      userService.fetchUserById.mockReturnValue(mockUser);
-      productService.getProduct.mockReturnValue(mockProduct);
+    it("shouldThrowInsufficientStockErrorWhenQuantityExceedsStock", () => {
+      expect(() =>
+        cartService.addProductToCartForUser({
+          userId: "user-1",
+          productId: "prod-1",
+          outletId: "outlet-1",
+          quantity: 11,
+        })
+      ).toThrow(InsufficientStockError);
 
+      // stock is untouched and nothing is added on failure
+      expect(mockProduct.availableStock).toBe(10);
+      expect(mockCart.products).toHaveLength(0);
+    });
+
+    it("shouldDefaultQuantityToOneAndReserveStock", () => {
       const result = cartService.addProductToCartForUser({
         userId: "user-1",
         productId: "prod-1",
@@ -102,16 +140,48 @@ describe("CartService", () => {
       expect(result).toEqual({
         cart: mockCart,
         product: mockProduct,
-        sellingPrice: mockProduct.sellingPrice,
+        quantity: 1,
+        sellingPrice: 9.99,
       });
-      expect(mockCart.products).toContain(mockProduct);
+      expect(mockProduct.availableStock).toBe(9);
+      expect(mockCart.products).toEqual([{ product: mockProduct, quantity: 1 }]);
+    });
+
+    it("shouldReserveTheRequestedQuantity", () => {
+      const result = cartService.addProductToCartForUser({
+        userId: "user-1",
+        productId: "prod-1",
+        outletId: "outlet-1",
+        quantity: 3,
+      });
+
+      expect(result.quantity).toBe(3);
+      expect(mockProduct.availableStock).toBe(7);
+      expect(mockCart.products).toEqual([{ product: mockProduct, quantity: 3 }]);
+    });
+
+    it("shouldMergeRepeatedAddsOfTheSameProduct", () => {
+      const request = {
+        userId: "user-1",
+        productId: "prod-1",
+        outletId: "outlet-1",
+      };
+
+      cartService.addProductToCartForUser({ ...request, quantity: 2 });
+      const result = cartService.addProductToCartForUser({
+        ...request,
+        quantity: 1,
+      });
+
+      expect(result.quantity).toBe(3);
+      expect(mockCart.products).toHaveLength(1);
+      expect(mockCart.products[0].quantity).toBe(3);
+      expect(mockProduct.availableStock).toBe(7);
     });
   });
 
   describe("getCartForUser", () => {
     it("shouldReturnCartForUser", () => {
-      userService.fetchUserById.mockReturnValue(mockUser);
-
       const result = cartService.getCartForUser("user-1");
 
       expect(result).toBe(mockCart);

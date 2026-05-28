@@ -141,12 +141,18 @@ Request Body
 {
   "userId": "user101",
   "productId": "product101",
-  "outletId": "store101"
+  "outletId": "store101",
+  "quantity": 2
 }
 ```
 
+`quantity` is optional and defaults to `1`; it must be a positive integer.
 The same endpoint accepts restaurant food items — e.g. `productId: "food201"`
 with `outletId: "rest101"`.
+
+Adding to the cart reserves stock: the product's `availableStock` is
+decremented, and repeated adds of the same product are merged into one line
+item with the quantities summed.
 
 Response Body
 
@@ -157,45 +163,28 @@ Response Body
     "outlet": null,
     "products": [
       {
-        "productId": "product103",
-        "productName": "Crackers",
-        "mrp": 10.5,
-        "sellingPrice": null,
-        "weight": 500,
-        "expiryDate": 0,
-        "threshold": 10,
-        "availableStock": 30,
-        "discount": null,
-        "store": {
-          "name": "Fresh Picks",
-          "description": null,
-          "outletId": "store101",
-          "inventory": []
-        }
+        "product": {
+          "productId": "product101",
+          "productName": "Wheat Bread",
+          "mrp": 10.5,
+          "sellingPrice": 9.99,
+          "availableStock": 28,
+          "discount": 0,
+          "store": { "name": "Fresh Picks", "outletId": "store101" }
+        },
+        "quantity": 2
       }
     ],
-    "user": null
+    "user": { "userId": "user101", "firstName": "John", "lastName": "Doe" }
   },
-  "product": {
-    "productId": "product103",
-    "productName": "Crackers",
-    "mrp": 10.5,
-    "sellingPrice": null,
-    "weight": 500,
-    "expiryDate": 0,
-    "threshold": 10,
-    "availableStock": 30,
-    "discount": null,
-    "store": {
-      "name": "Fresh Picks",
-      "description": null,
-      "outletId": "store101",
-      "inventory": []
-    }
-  },
-  "sellingPrice": null
+  "product": { "productId": "product101", "sellingPrice": 9.99 },
+  "quantity": 2,
+  "sellingPrice": 9.99
 }
 ```
+
+Returns `400` if `quantity` is not a positive integer, `404` if the user or
+product is not found, and `409` if there is not enough stock to reserve.
 
 ### View Cart
 
@@ -203,16 +192,18 @@ Response Body
 GET /cart/view?userId=user101
 ```
 
-Response Body
+Response Body — `products` is a list of `{ product, quantity }` line items.
 
 ```json
 {
   "cartId": "cart101",
   "outlet": null,
-  "products": [],
-  "user": null
+  "products": [{ "product": { "productId": "product101" }, "quantity": 2 }],
+  "user": { "userId": "user101" }
 }
 ```
+
+Returns `400` if `userId` is missing and `404` if the user is not found.
 
 ### Inventory Health
 
