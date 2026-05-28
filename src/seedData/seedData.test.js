@@ -59,4 +59,31 @@ describe("SeedData", () => {
       );
     });
   });
+
+  describe("restaurants and food products", () => {
+    it("shouldSeedARestaurant", () => {
+      const restaurant = SeedData.restaurants.find(
+        (r) => r.outletId === "rest101"
+      );
+
+      expect(restaurant).toBeDefined();
+      expect(restaurant.name).toBe("Pizza Palace");
+    });
+
+    it("shouldSeedFoodProductsBelongingToARestaurant", () => {
+      const food = SeedData.foodProducts.find((p) => p.productId === "food101");
+
+      expect(food).toBeDefined();
+      expect(food.productName).toBe("Margherita Pizza");
+      expect(food.restaurant.outletId).toBe("rest101");
+      expect(food.sellingPrice).toBeGreaterThan(0);
+      expect(food.available).toBe(true);
+    });
+
+    it("shouldSeedAnUnavailableFoodProduct", () => {
+      const unavailable = SeedData.foodProducts.find((p) => !p.available);
+
+      expect(unavailable).toBeDefined();
+    });
+  });
 });

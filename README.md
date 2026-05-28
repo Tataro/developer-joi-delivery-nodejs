@@ -60,6 +60,27 @@ Dummy Products for Stores to sell and users to buy from.
 | product102 | Spinach     | Grocery | store101   | 10.50 | 0.5kg  | 30    |
 | product103 | Crackers    | Grocery | store101   | 10.50 | 0.5kg  | 30    |
 
+### Restaurants
+
+Sample restaurant data seeded for development purposes only.
+
+| RestaurantId | OutletName   | Type       | Description       |
+| ------------ | ------------ | ---------- | ----------------- |
+| rest101      | Pizza Palace | Restaurant | Local restaurant  |
+
+### Food Products
+
+Restaurant menu items. Unavailable items cannot be added to a cart (the
+add-to-cart endpoint treats them as not found). Food and grocery products are
+both added through the same `POST /cart/product` endpoint — pass the restaurant
+id as `outletId` for food.
+
+| ProductId | ProductName     | Type | RestaurantRefId | MRP   | SellingPrice | Available |
+| --------- | --------------- | ---- | --------------- | ----- | ------------ | --------- |
+| food101   | Margherita Pizza | Food | rest101         | 12.50 | 10.99        | true      |
+| food102   | Pepperoni Pizza  | Food | rest101         | 12.50 | 10.99        | true      |
+| food103   | Truffle Pizza    | Food | rest101         | 12.50 | 10.99        | false     |
+
 ## Requirements
 
 The project requires [Node v22](https://nodejs.org/).

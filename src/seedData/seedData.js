@@ -2,6 +2,8 @@ const Cart = require("../domain/cart");
 const GroceryStore = require("../domain/groceryStore");
 const User = require("../domain/user");
 const GroceryProduct = require("../domain/groceryProduct");
+const Restaurant = require("../domain/restaurant");
+const FoodProduct = require("../domain/foodProduct");
 
 class SeedData {
   static createCartForUser(user, cartId) {
@@ -47,6 +49,21 @@ class SeedData {
       store, // store reference
     );
   }
+
+  static createRestaurant(outletName, restaurantId) {
+    return new Restaurant(outletName, "Local restaurant", restaurantId);
+  }
+
+  static createFoodProduct(productName, productId, restaurant, available = true) {
+    return new FoodProduct(
+      productId,
+      productName,
+      12.5, // mrp
+      10.99, // sellingPrice
+      restaurant,
+      available,
+    );
+  }
 }
 
 SeedData.store101 = SeedData.createStore("Fresh Picks", "store101");
@@ -70,6 +87,28 @@ SeedData.groceryProducts = [
 SeedData.groceryProducts.forEach((product) => {
   product.store.inventory.add(product);
 });
+
+SeedData.restaurant101 = SeedData.createRestaurant("Pizza Palace", "rest101");
+SeedData.restaurants = [SeedData.restaurant101];
+
+SeedData.foodProducts = [
+  SeedData.createFoodProduct(
+    "Margherita Pizza",
+    "food101",
+    SeedData.restaurant101,
+  ),
+  SeedData.createFoodProduct(
+    "Pepperoni Pizza",
+    "food102",
+    SeedData.restaurant101,
+  ),
+  SeedData.createFoodProduct(
+    "Truffle Pizza",
+    "food103",
+    SeedData.restaurant101,
+    false, // currently unavailable
+  ),
+];
 
 SeedData.users = [SeedData.user101, SeedData.user102];
 
