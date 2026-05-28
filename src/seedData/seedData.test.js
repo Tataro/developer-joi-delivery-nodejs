@@ -46,4 +46,17 @@ describe("SeedData", () => {
       expect(cart101.outlet).toBeNull();
     });
   });
+
+  describe("store inventory", () => {
+    it("shouldPopulateEachStoreWithItsOwnProducts", () => {
+      const productIds = Array.from(SeedData.store101.inventory).map(
+        (product) => product.productId
+      );
+
+      expect(SeedData.store101.inventory.size).toBe(3);
+      expect(productIds).toEqual(
+        expect.arrayContaining(["product101", "product102", "product103"])
+      );
+    });
+  });
 });

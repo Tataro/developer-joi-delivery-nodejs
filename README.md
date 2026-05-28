@@ -196,14 +196,27 @@ Response Body
 ### Inventory Health
 
 ```http
-GET /inventory/health?storeid=<storeid>
+GET /inventory/health?storeId=store101
 ```
+
+Returns a summary of stock levels for a store. Each product is classified by
+its `availableStock` relative to its `threshold`:
+
+- `outOfStock` — `availableStock` is `0`
+- `lowStock` — `availableStock` is at or below the `threshold`
+- `healthy` — `availableStock` is above the `threshold`
+
+A missing `storeId` returns `400`; an unknown store returns `404`.
 
 Response Body
 
-```json lines
+```json
 {
-  // to be implemented.
+  "storeId": "store101",
+  "totalProducts": 3,
+  "outOfStock": 0,
+  "lowStock": 0,
+  "healthy": 3
 }
 ```
 

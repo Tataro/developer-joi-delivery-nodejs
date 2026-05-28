@@ -51,6 +51,7 @@ class SeedData {
 
 SeedData.store101 = SeedData.createStore("Fresh Picks", "store101");
 SeedData.store102 = SeedData.createStore("Natural Choice", "store102");
+SeedData.stores = [SeedData.store101, SeedData.store102];
 SeedData.user101 = SeedData.createUser("user101", "John", "Doe");
 SeedData.user102 = SeedData.createUser("user102", "Rachel", "Zane");
 
@@ -64,6 +65,11 @@ SeedData.groceryProducts = [
   SeedData.createGroceryProduct("Spinach", "product102", SeedData.store101),
   SeedData.createGroceryProduct("Crackers", "product103", SeedData.store101),
 ];
+
+// Register each product with its store so the store knows its inventory.
+SeedData.groceryProducts.forEach((product) => {
+  product.store.inventory.add(product);
+});
 
 SeedData.users = [SeedData.user101, SeedData.user102];
 

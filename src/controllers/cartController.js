@@ -1,11 +1,6 @@
 const cartService = require("../services/cartService");
 const ValidationError = require("../domain/errors/validationError");
-
-function sendError(res, error) {
-  const statusCode = error.statusCode || 500;
-  const message = statusCode === 500 ? "Internal server error" : error.message;
-  res.status(statusCode).json({ error: message });
-}
+const sendError = require("./sendError");
 
 const cartController = {
   addProductToCart(req, res) {
