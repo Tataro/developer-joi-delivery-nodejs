@@ -1,11 +1,9 @@
-const Product = require("./product");
+const product = require("./product");
 
-class GroceryProduct extends Product {
+class MedicineProduct extends product {
   /**
    * @param {number} sellingPrice
-   * @param {number} weight
    * @param {string} expiryDate
-   * @param {number} threshold
    * @param {number} availableStock
    * @param {Store} store
    * @param {number} [discount]
@@ -16,9 +14,7 @@ class GroceryProduct extends Product {
     productName,
     mrp,
     sellingPrice,
-    weight,
     expiryDate,
-    threshold,
     availableStock,
     store,
     discount = 0,
@@ -26,12 +22,8 @@ class GroceryProduct extends Product {
     super(productId, productName, mrp);
     /** @type {number} */
     this.sellingPrice = sellingPrice;
-    /** @type {number} */
-    this.weight = weight;
     /** @type {string} */
     this.expiryDate = expiryDate;
-    /** @type {number} */
-    this.threshold = threshold;
     /** @type {number} */
     this.availableStock = availableStock;
     /** @type {Store} */
@@ -41,8 +33,8 @@ class GroceryProduct extends Product {
   }
 
   get category() {
-    return "grocery";
+    return "medicine";
   }
 }
 
-module.exports = GroceryProduct;
+module.exports = MedicineProduct;

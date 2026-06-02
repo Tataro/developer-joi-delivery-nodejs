@@ -15,6 +15,10 @@ class FoodProduct extends Product {
     /** @type {boolean} */
     this.available = available;
   }
+
+  get category() {
+    return "food";
+  }
 }
 
 module.exports = FoodProduct;
