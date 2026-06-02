@@ -1,9 +1,12 @@
 const Cart = require("../domain/cart");
-const GroceryStore = require("../domain/groceryStore");
+const Store = require("../domain/store");
 const User = require("../domain/user");
 const GroceryProduct = require("../domain/groceryProduct");
 const Restaurant = require("../domain/restaurant");
 const FoodProduct = require("../domain/foodProduct");
+const HouseholdProduct = require("../domain/householdProduct");
+const MedicineProduct = require("../domain/medicineProduct");
+const ElectronicsProduct = require("../domain/electronicProduct");
 
 class SeedData {
   static createCartForUser(user, cartId) {
@@ -11,7 +14,7 @@ class SeedData {
   }
 
   static createStore(outletName, description, storeId) {
-    return new GroceryStore(outletName, description, storeId);
+    return new Store(outletName, description, storeId);
   }
 
   static createUser(userId, firstName, lastName) {
@@ -54,7 +57,12 @@ class SeedData {
     return new Restaurant(outletName, "Local restaurant", restaurantId);
   }
 
-  static createFoodProduct(productName, productId, restaurant, available = true) {
+  static createFoodProduct(
+    productName,
+    productId,
+    restaurant,
+    available = true,
+  ) {
     return new FoodProduct(
       productId,
       productName,
@@ -62,6 +70,50 @@ class SeedData {
       10.99, // sellingPrice
       restaurant,
       available,
+    );
+  }
+
+  static createHouseholdProduct(productName, productId, store, discount = 0) {
+    return new HouseholdProduct(
+      productId,
+      productName,
+      15.0, // mrp
+      13.99, // sellingPrice
+      20, // availableStock
+      store, // store reference
+      discount, // discount percentage
+    );
+  }
+
+  static createMedicineProduct(
+    productName,
+    productId,
+    expiryDate,
+    store,
+    discount = 0,
+  ) {
+    return new MedicineProduct(
+      productId,
+      productName,
+      20.0, // mrp
+      18.99, // sellingPrice
+      expiryDate, // expiryDate
+      50, // availableStock
+      store, // store reference
+      discount, // discount percentage
+    );
+  }
+
+  static createElectronicsProduct(productName, productId, store, discount = 0) {
+    return new ElectronicsProduct(
+      productId,
+      productName,
+      100.0, // mrp
+      89.99, // sellingPrice
+      null, // expiryDate (electronics do not expire)
+      25, // availableStock
+      store, // store reference
+      discount, // discount percentage
     );
   }
 }
@@ -91,9 +143,66 @@ SeedData.groceryProducts = [
   SeedData.createGroceryProduct("Crackers", "product103", SeedData.store101),
 ];
 
+SeedData.householdProducts = [
+  SeedData.createHouseholdProduct(
+    "Dishwashing Liquid",
+    "household101",
+    SeedData.store102,
+    10, // discount percentage
+  ),
+  SeedData.createHouseholdProduct(
+    "Laundry Detergent",
+    "household102",
+    SeedData.store102,
+  ),
+];
+
+SeedData.medicineProducts = [
+  SeedData.createMedicineProduct(
+    "Pain Reliever",
+    "medicine101",
+    "2025-12-31", // expiry date
+    SeedData.store102,
+    20, // discount percentage
+  ),
+  SeedData.createMedicineProduct(
+    "Cough Syrup",
+    "medicine102",
+    "2024-06-30", // expiry date
+    SeedData.store102,
+    15, // discount percentage
+  ),
+];
+
+SeedData.electronicProducts = [
+  SeedData.createElectronicsProduct(
+    "Wireless Earbuds",
+    "electronic101",
+    SeedData.store102,
+    15, // discount percentage
+  ),
+  SeedData.createElectronicsProduct(
+    "Smartphone Charger",
+    "electronic102",
+    SeedData.store102,
+  ),
+];
+
 // Register each product with its store so the store knows its inventory.
 SeedData.groceryProducts.forEach((product) => {
-  product.store.inventory.add(product);
+  product.store.addGroceryProduct(product);
+});
+
+SeedData.householdProducts.forEach((product) => {
+  product.store.addHouseholdProduct(product);
+});
+
+SeedData.medicineProducts.forEach((product) => {
+  product.store.addMedicineProduct(product);
+});
+
+SeedData.electronicProducts.forEach((product) => {
+  product.store.addElectronicProduct(product);
 });
 
 SeedData.restaurant101 = SeedData.createRestaurant("Pizza Palace", "rest101");
