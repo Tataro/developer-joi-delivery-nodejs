@@ -21,7 +21,7 @@ class GroceryProduct extends Product {
     threshold,
     availableStock,
     store,
-    discount = 0
+    discount = 0,
   ) {
     super(productId, productName, mrp);
     /** @type {number} */
@@ -38,6 +38,7 @@ class GroceryProduct extends Product {
     this.store = store;
     /** @type {number} */
     this.discount = discount;
+    this.category = "Grocery";
   }
 }
 

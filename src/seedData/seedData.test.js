@@ -60,12 +60,12 @@ describe("SeedData", () => {
   describe("store inventory", () => {
     it("shouldPopulateEachStoreWithItsOwnProducts", () => {
       const productIds = Array.from(SeedData.store101.inventory).map(
-        (product) => product.productId
+        (product) => product.productId,
       );
 
-      expect(SeedData.store101.inventory.size).toBe(3);
+      expect(SeedData.store101.inventory.size).toBe(9);
       expect(productIds).toEqual(
-        expect.arrayContaining(["product101", "product102", "product103"])
+        expect.arrayContaining(["product101", "product102", "product103"]),
       );
     });
   });
@@ -73,7 +73,7 @@ describe("SeedData", () => {
   describe("restaurants and food products", () => {
     it("shouldSeedARestaurant", () => {
       const restaurant = SeedData.restaurants.find(
-        (r) => r.outletId === "rest101"
+        (r) => r.outletId === "rest101",
       );
 
       expect(restaurant).toBeDefined();

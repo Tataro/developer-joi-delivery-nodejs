@@ -1,6 +1,7 @@
 const express = require("express");
 const cartController = require("./controllers/cartController");
 const inventoryController = require("./controllers/inventoryController");
+const orderController = require("./controllers/orderController");
 const cartService = require("./services/cartService");
 const SeedData = require("./seedData/seedData");
 
@@ -30,6 +31,11 @@ app.get("/cart/view", (req, res) => {
 app.get("/inventory/health", (req, res) => {
   console.log("GET /inventory/health route hit");
   inventoryController.fetchStoreInventoryHealth(req, res);
+});
+
+app.post("/order/place", (req, res) => {
+  console.log("POST /order/place route hit");
+  orderController.placeOrder(req, res);
 });
 
 const port = process.env.PORT || 8080;

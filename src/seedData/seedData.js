@@ -4,6 +4,10 @@ const User = require("../domain/user");
 const GroceryProduct = require("../domain/groceryProduct");
 const Restaurant = require("../domain/restaurant");
 const FoodProduct = require("../domain/foodProduct");
+const Store = require("../domain/store");
+const EletronicProduct = require("../domain/eletronicProduct");
+const MedecineProduct = require("../domain/medecineProduct");
+const HouseholdProduct = require("../domain/householdProduct");
 
 class SeedData {
   static createCartForUser(user, cartId) {
@@ -11,7 +15,7 @@ class SeedData {
   }
 
   static createStore(outletName, description, storeId) {
-    return new GroceryStore(outletName, description, storeId);
+    return new Store(outletName, description, storeId);
   }
 
   static createUser(userId, firstName, lastName) {
@@ -50,11 +54,46 @@ class SeedData {
     );
   }
 
+  static createElectronicProduct(productName, productId, store) {
+    return new EletronicProduct(
+      productId,
+      productName,
+      499.99, // mrp
+      449.99, // sellingPrice
+      store, // store reference
+    );
+  }
+
+  static createMedecineProduct(productName, productId, store) {
+    return new MedecineProduct(
+      productId,
+      productName,
+      19.99, // mrp
+      17.99, // sellingPrice
+      store, // store reference
+    );
+  }
+
+  static createHouseholdProduct(productName, productId, store) {
+    return new HouseholdProduct(
+      productId,
+      productName,
+      29.99, // mrp
+      24.99, // sellingPrice
+      store, // store reference
+    );
+  }
+
   static createRestaurant(outletName, restaurantId) {
     return new Restaurant(outletName, "Local restaurant", restaurantId);
   }
 
-  static createFoodProduct(productName, productId, restaurant, available = true) {
+  static createFoodProduct(
+    productName,
+    productId,
+    restaurant,
+    available = true,
+  ) {
     return new FoodProduct(
       productId,
       productName,
@@ -89,10 +128,57 @@ SeedData.groceryProducts = [
   SeedData.createGroceryProduct("Wheat Bread", "product101", SeedData.store101),
   SeedData.createGroceryProduct("Spinach", "product102", SeedData.store101),
   SeedData.createGroceryProduct("Crackers", "product103", SeedData.store101),
+  SeedData.createGroceryProduct("Almond Milk", "product201", SeedData.store102),
+  SeedData.createGroceryProduct(
+    "Greek Yogurt",
+    "product202",
+    SeedData.store102,
+  ),
+];
+SeedData.eletronicProducts = [
+  SeedData.createElectronicProduct(
+    "Wireless Headphones",
+    "product301",
+    SeedData.store101,
+  ),
+  SeedData.createElectronicProduct(
+    "Smart Watch",
+    "product302",
+    SeedData.store101,
+  ),
+];
+SeedData.medecineProducts = [
+  SeedData.createMedecineProduct(
+    "Pain Reliever",
+    "product401",
+    SeedData.store101,
+  ),
+  SeedData.createMedecineProduct(
+    "Cough Syrup",
+    "product402",
+    SeedData.store101,
+  ),
+];
+SeedData.householdProducts = [
+  SeedData.createHouseholdProduct("Dish Soap", "product501", SeedData.store101),
+  SeedData.createHouseholdProduct(
+    "Laundry Detergent",
+    "product502",
+    SeedData.store101,
+  ),
 ];
 
 // Register each product with its store so the store knows its inventory.
 SeedData.groceryProducts.forEach((product) => {
+  product.store.inventory.add(product);
+});
+SeedData.eletronicProducts.forEach((product) => {
+  product.store.inventory.add(product);
+});
+SeedData.medecineProducts.forEach((product) => {
+  product.store.inventory.add(product);
+});
+SeedData.householdProducts.forEach((product) => {
   product.store.inventory.add(product);
 });
 

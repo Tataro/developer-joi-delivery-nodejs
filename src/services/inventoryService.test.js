@@ -13,7 +13,7 @@ function productWithStock(productId, availableStock, threshold) {
     7,
     threshold,
     availableStock,
-    null
+    null,
   );
 }
 
@@ -44,17 +44,17 @@ describe("inventoryService", () => {
 
       expect(health).toEqual({
         storeId: "store101",
-        totalProducts: 3,
+        totalProducts: 9,
         outOfStock: 0,
         lowStock: 0,
-        healthy: 3,
+        healthy: 9,
       });
     });
 
     it("shouldThrowNotFoundErrorWhenTheStoreDoesNotExist", () => {
-      expect(() =>
-        inventoryService.fetchStoreInventoryHealth("ghost")
-      ).toThrow(NotFoundError);
+      expect(() => inventoryService.fetchStoreInventoryHealth("ghost")).toThrow(
+        NotFoundError,
+      );
     });
   });
 });

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "JOI Delivery - A technology-first food and grocery delivery platform",
   "scripts": {
-    "test": "jest",
+    "test": "jest --verbose",
     "test-watch": "jest --watchAll",
     "start": "node src/app",
     "dev": "nodemon --inspect"
