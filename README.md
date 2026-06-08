@@ -60,6 +60,27 @@ Dummy Products for Stores to sell and users to buy from.
 | product102 | Spinach     | Grocery | store101   | 10.50 | 0.5kg  | 30    |
 | product103 | Crackers    | Grocery | store101   | 10.50 | 0.5kg  | 30    |
 
+### Restaurants
+
+Sample restaurant data seeded for development purposes only.
+
+| RestaurantId | OutletName   | Type       | Description       |
+| ------------ | ------------ | ---------- | ----------------- |
+| rest101      | Pizza Palace | Restaurant | Local restaurant  |
+
+### Food Products
+
+Restaurant menu items. Unavailable items cannot be added to a cart (the
+add-to-cart endpoint treats them as not found). Food and grocery products are
+both added through the same `POST /cart/product` endpoint — pass the restaurant
+id as `outletId` for food.
+
+| ProductId | ProductName     | Type | RestaurantRefId | MRP   | SellingPrice | Available |
+| --------- | --------------- | ---- | --------------- | ----- | ------------ | --------- |
+| food101   | Margherita Pizza | Food | rest101         | 12.50 | 10.99        | true      |
+| food102   | Pepperoni Pizza  | Food | rest101         | 12.50 | 10.99        | true      |
+| food103   | Truffle Pizza    | Food | rest101         | 12.50 | 10.99        | false     |
+
 ## Requirements
 
 The project requires [Node v22](https://nodejs.org/).
@@ -119,11 +140,16 @@ Content-Type: application/json
 
 Request Body
 
+`quantity` is optional and defaults to `1`. It must be a positive integer;
+otherwise the endpoint returns `400`. Adding a product already in the cart
+increases that line item's quantity rather than creating a duplicate.
+
 ```json
 {
   "userId": "user101",
   "productId": "product101",
-  "outletId": "store101"
+  "outletId": "store101",
+  "quantity": 2
 }
 ```
 
@@ -136,43 +162,54 @@ Response Body
     "outlet": null,
     "products": [
       {
-        "productId": "product103",
-        "productName": "Crackers",
-        "mrp": 10.5,
-        "sellingPrice": null,
-        "weight": 500,
-        "expiryDate": 0,
-        "threshold": 10,
-        "availableStock": 30,
-        "discount": null,
-        "store": {
-          "name": "Fresh Picks",
-          "description": null,
-          "outletId": "store101",
-          "inventory": []
-        }
+        "product": {
+          "productId": "product101",
+          "productName": "Wheat Bread",
+          "mrp": 10.5,
+          "sellingPrice": 9.99,
+          "weight": 0.5,
+          "expiryDate": 7,
+          "threshold": 10,
+          "availableStock": 30,
+          "store": {
+            "name": "Fresh Picks",
+            "description": "Premium grocery store",
+            "outletId": "store101",
+            "inventory": {}
+          },
+          "discount": 0
+        },
+        "quantity": 2
       }
     ],
-    "user": null
-  },
-  "product": {
-    "productId": "product103",
-    "productName": "Crackers",
-    "mrp": 10.5,
-    "sellingPrice": null,
-    "weight": 500,
-    "expiryDate": 0,
-    "threshold": 10,
-    "availableStock": 30,
-    "discount": null,
-    "store": {
-      "name": "Fresh Picks",
-      "description": null,
-      "outletId": "store101",
-      "inventory": []
+    "user": {
+      "userId": "user101",
+      "username": "john",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john.doe@gmail.com",
+      "phoneNumber": "598326120",
+      "cart": null
     }
   },
-  "sellingPrice": null
+  "product": {
+    "productId": "product101",
+    "productName": "Wheat Bread",
+    "mrp": 10.5,
+    "sellingPrice": 9.99,
+    "weight": 0.5,
+    "expiryDate": 7,
+    "threshold": 10,
+    "availableStock": 30,
+    "store": {
+      "name": "Fresh Picks",
+      "description": "Premium grocery store",
+      "outletId": "store101",
+      "inventory": {}
+    },
+    "discount": 0
+  },
+  "sellingPrice": 9.99
 }
 ```
 
@@ -182,6 +219,8 @@ Response Body
 GET /cart/view?userId=user101
 ```
 
+A missing `userId` returns `400`; an unknown `userId` returns `404`.
+
 Response Body
 
 ```json
@@ -189,21 +228,42 @@ Response Body
   "cartId": "cart101",
   "outlet": null,
   "products": [],
-  "user": null
+  "user": {
+    "userId": "user101",
+    "username": "john",
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@gmail.com",
+    "phoneNumber": "598326120",
+    "cart": null
+  }
 }
 ```
 
 ### Inventory Health
 
 ```http
-GET /inventory/health?storeid=<storeid>
+GET /inventory/health?storeId=store101
 ```
+
+Returns a summary of stock levels for a store. Each product is classified by
+its `availableStock` relative to its `threshold`:
+
+- `outOfStock` — `availableStock` is `0`
+- `lowStock` — `availableStock` is at or below the `threshold`
+- `healthy` — `availableStock` is above the `threshold`
+
+A missing `storeId` returns `400`; an unknown store returns `404`.
 
 Response Body
 
-```json lines
+```json
 {
-  // to be implemented.
+  "storeId": "store101",
+  "totalProducts": 3,
+  "outOfStock": 0,
+  "lowStock": 0,
+  "healthy": 3
 }
 ```
 

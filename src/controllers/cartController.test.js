@@ -1,4 +1,5 @@
 const cartController = require("./cartController");
+const NotFoundError = require("../domain/errors/notFoundError");
 
 jest.mock("../services/cartService");
 
@@ -24,7 +25,7 @@ describe("CartController", () => {
     it("shouldAddTheRequestedProductToTheCart", () => {
       const addProductRequest = {
         userId: "user101",
-        productId: "grocery101",
+        productId: "product101",
         outletId: "store101",
         quantity: 2,
       };
@@ -33,8 +34,8 @@ describe("CartController", () => {
 
       const expectedResult = {
         cart: { products: [] },
-        product: { productId: "grocery101", name: "Organic Bananas" },
-        sellingPrice: 3.49,
+        product: { productId: "product101", productName: "Wheat Bread" },
+        sellingPrice: 9.99,
       };
 
       const cartService = require("../services/cartService");
@@ -48,6 +49,26 @@ describe("CartController", () => {
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(expectedResult);
     });
+
+    it("shouldRespondWith404WhenTheServiceThrowsNotFoundError", () => {
+      mockReq.body = {
+        userId: "ghost",
+        productId: "product101",
+        outletId: "store101",
+      };
+
+      const cartService = require("../services/cartService");
+      cartService.addProductToCartForUser.mockImplementation(() => {
+        throw new NotFoundError("User 'ghost' not found");
+      });
+
+      cartController.addProductToCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: "User 'ghost' not found",
+      });
+    });
   });
 
   describe("viewCart", () => {
@@ -59,9 +80,11 @@ describe("CartController", () => {
         cartId: "cart101",
         userId: "user101",
         products: [
-          { productId: "grocery101", name: "Organic Bananas", quantity: 2 },
+          {
+            product: { productId: "product101", productName: "Wheat Bread" },
+            quantity: 2,
+          },
         ],
-        total: 6.98,
       };
 
       const cartService = require("../services/cartService");
@@ -72,6 +95,36 @@ describe("CartController", () => {
       expect(cartService.getCartForUser).toHaveBeenCalledWith(userId);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(expectedCart);
+    });
+
+    it("shouldRespondWith400WhenUserIdIsMissing", () => {
+      mockReq.query = {};
+
+      const cartService = require("../services/cartService");
+
+      cartController.viewCart(mockReq, mockRes);
+
+      expect(cartService.getCartForUser).not.toHaveBeenCalled();
+      expect(mockRes.status).toHaveBeenCalledWith(400);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: "userId query parameter is required",
+      });
+    });
+
+    it("shouldRespondWith404WhenTheUserDoesNotExist", () => {
+      mockReq.query = { userId: "ghost" };
+
+      const cartService = require("../services/cartService");
+      cartService.getCartForUser.mockImplementation(() => {
+        throw new NotFoundError("User 'ghost' not found");
+      });
+
+      cartController.viewCart(mockReq, mockRes);
+
+      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockRes.json).toHaveBeenCalledWith({
+        error: "User 'ghost' not found",
+      });
     });
   });
 });

@@ -1,6 +1,7 @@
 const express = require("express");
 const cartController = require("./controllers/cartController");
 const inventoryController = require("./controllers/inventoryController");
+const orderController = require("./controllers/orderController");
 const cartService = require("./services/cartService");
 const SeedData = require("./seedData/seedData");
 
@@ -20,6 +21,11 @@ app.use((req, res, next) => {
 app.post("/cart/product", (req, res) => {
   console.log("POST /cart/product route hit");
   cartController.addProductToCart(req, res);
+});
+
+app.post("/order", (req, res) => {
+  console.log("POST /order route hit");
+  orderController.createOrder(req, res);
 });
 
 app.get("/cart/view", (req, res) => {

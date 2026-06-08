@@ -1,4 +1,4 @@
-const { Outlet } = require("./outlet");
+const Outlet = require("./outlet");
 
 class Restaurant extends Outlet {}
 

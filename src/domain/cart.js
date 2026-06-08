@@ -11,7 +11,7 @@ class Cart {
     /** @type {Outlet} */
     this.outlet = outlet;
 
-    /** @type {Array<Product>} */
+    /** @type {Array<CartItem>} */
     this.products = [];
 
     /** @type {User} */
